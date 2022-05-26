@@ -578,7 +578,7 @@ class DistributedBossbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             Func(self.clearChat))
         return track
 
-    def enterBattleThree(self):
+    def enterBossRound(self):
         self.cleanupIntervals()
         self.calcNotDeadList()
         for table in self.tables.values():
@@ -599,7 +599,7 @@ class DistributedBossbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.releaseToons()
         base.playMusic(self.battleOneMusic, looping=1, volume=0.9)
 
-    def exitBattleThree(self):
+    def exitBossRound(self):
         self.cleanupBattles()
         self.battleOneMusic.stop()
         localAvatar.inventory.setBattleCreditMultiplier(1)
@@ -1172,7 +1172,7 @@ class DistributedBossbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             zapTrack.append(Func(self.disableLocalToonSimpleCollisions))
             currentState = self.state
             if currentState in ('BattleFour', 'BattleTwo'):
-                zapTrack.append(Func(self.toFinalBattleMode))
+                zapTrack.append(Func(self.toBossBattleMode))
             else:
                 self.notify.warning('doZapToon going to walkMode, how did this happen?')
                 zapTrack.append(Func(self.toWalkMode))

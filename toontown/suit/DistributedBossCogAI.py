@@ -1,15 +1,12 @@
+from panda3d.core import *
+
+import SuitDNA
+import random
 from direct.directnotify import DirectNotifyGlobal
 from otp.avatar import DistributedAvatarAI
-from toontown.battle import BattleExperienceAI
-from toontown.toonbase import ToontownGlobals
-from toontown.toonbase import ToontownBattleGlobals
-from toontown.toon import InventoryBase
-from toontown.battle import DistributedBattleFinalAI
-from toontown.building import SuitPlannerInteriorAI
 from toontown.battle import BattleBase
-from toontown.coghq import CogDisguiseGlobals
-from panda3d.core import *
-import SuitDNA, random
+from toontown.toonbase import ToontownGlobals
+
 AllBossCogs = []
 
 class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
@@ -21,35 +18,20 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
         self.dna = SuitDNA.SuitDNA()
         self.dna.newBossCog(self.dept)
         self.deptIndex = SuitDNA.suitDepts.index(self.dept)
-        self.resetBattleCounters()
         self.looseToons = []
         self.involvedToons = []
-        self.toonsA = []
-        self.toonsB = []
         self.nearToons = []
-        self.suitsA = []
-        self.activeSuitsA = []
-        self.suitsB = []
-        self.activeSuitsB = []
-        self.reserveSuits = []
         self.barrier = None
-        self.keyStates = [
-         'BattleOne', 'BattleTwo', 'BattleThree', 'Victory']
         self.bossDamage = 0
-        self.battleThreeStart = 0
-        self.battleThreeDuration = 1800
+        self.bossRoundStart = 0
+        self.bossRoundDuration = 1800
         self.attackCode = None
         self.attackAvId = 0
         self.hitCount = 0
-        self.hardmode = 0
-        self.nerfed = False
-        self.numRentalDiguises = 0
-        self.numNormalDiguises = 0
         AllBossCogs.append(self)
         return
 
     def generateWithRequired(self, zoneId):
-        self.numRentalDiguises, self.numNormalDiguises = self.countDisguises()
         DistributedAvatarAI.DistributedAvatarAI.generateWithRequired(self, zoneId)
 
     def delete(self):
@@ -149,42 +131,9 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
     def isToonKnown(self, toonId):
         return toonId in self.involvedToons or toonId in self.looseToons
 
-    def isToonWearingRentalSuit(self, toonId):
-        if not self.isToonKnown(toonId):
-            self.notify.warning('isToonWearingRentalSuit: unknown toonId %s' % toonId)
-            return False
-        toon = self.air.doId2do.get(toonId)
-        if toon:
-            if hasattr(toon, 'forceRentalDisguise') and toon.forceRentalDisguise:
-                return True
-            else:
-                return not CogDisguiseGlobals.isPaidSuitComplete(toon, toon.getCogParts(), self.dept)
-        else:
-            self.notify.warning('isToonWearingRentalSuit: toonId %s does not exist' % toonId)
-            return False
-
-    def __countNormalDisguiseToons(self):
-        return len(self.involvedToons) + len(self.looseToons) - self.__countRentalDisguiseToons()
-
-    def __countRentalDisguiseToons(self):
-        count = 0
-        for toonId in self.involvedToons + self.looseToons:
-            if self.isToonWearingRentalSuit(toonId):
-                count += 1
-
-        return count
-
-    def countDisguises(self):
-        rentals = self.__countRentalDisguiseToons()
-        normals = self.__countNormalDisguiseToons()
-        return (
-         rentals, normals)
-
-    def sendBattleIds(self):
-        self.sendUpdate('setBattleIds', [self.battleNumber, self.battleAId, self.battleBId])
-
     def sendToonIds(self):
-        self.sendUpdate('setToonIds', [self.involvedToons, self.toonsA, self.toonsB])
+        print()
+        self.sendUpdate('setToonIds', [self.involvedToons])
 
     def damageToon(self, toon, deduction):
 
@@ -197,29 +146,10 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
 
     def toonDied(self, toon):
         self.sendUpdate('toonDied', [toon.doId])
-        # empty = InventoryBase.InventoryBase(toon)
-        # toon.b_setInventory(empty.makeNetString())
         self.removeToon(toon.doId, died=True)
 
     def healToon(self, toon, increment):
         toon.toonUp(increment)
-
-    def d_setBattleExperience(self):
-        self.sendUpdate('setBattleExperience', self.getBattleExperience())
-
-    def getBattleExperience(self):
-        result = BattleExperienceAI.getBattleExperience(8, self.involvedToons, self.toonExp, self.toonSkillPtsGained, self.toonOrigQuests, self.toonItems, self.toonOrigMerits, self.toonMerits, self.toonParts, self.suitsKilled, self.helpfulToons)
-        return result
-
-    def b_setArenaSide(self, arenaSide):
-        self.setArenaSide(arenaSide)
-        self.d_setArenaSide(arenaSide)
-
-    def setArenaSide(self, arenaSide):
-        self.arenaSide = arenaSide
-
-    def d_setArenaSide(self, arenaSide):
-        self.sendUpdate('setArenaSide', [arenaSide])
 
     def b_setState(self, state):
         self.setState(state)
@@ -230,41 +160,12 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
 
     def setState(self, state):
         self.demand(state)
-        if self.air:
-            if state in self.keyStates:
-                self.air.writeServerEvent('bossBattle', self.doId, '%s|%s|%s|%s|%s|%s' % (self.dept, state, self.involvedToons, self.formatReward(), self.formatLaffLevels(), self.formatSuitType()))
 
     def getState(self):
         return self.state
 
-    def formatReward(self):
-        return 'unspecified'
-
-    def formatLaffLevels(self):
-        try:
-            return map(lambda id: simbase.air.doId2do.get(id).getMaxHp(), self.involvedToons)
-        except Exception, e:
-            self.notify.warning(e)
-            return []
-
-    def formatSuitType(self):
-        try:
-
-            def hasSuit(id):
-                if not self.isToonWearingRentalSuit(id):
-                    return 1
-                else:
-                    return 0
-
-            return map(hasSuit, self.involvedToons)
-        except Exception, e:
-            self.notify.warning(e)
-            return []
-
     def enterOff(self):
-        self.resetBattles()
         self.resetToons()
-        self.resetBattleCounters()
 
     def exitOff(self):
         pass
@@ -286,7 +187,6 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
                 if toon:
                     self.notify.debug('%s. involved toon %s, %s/%s' % (self.doId, toonId, toon.getHp(), toon.getMaxHp()))
 
-        self.resetBattles()
         self.barrier = self.beginBarrier('Elevator', self.involvedToons, 30, self.__doneElevator)
 
     def __doneElevator(self, avIds):
@@ -296,14 +196,10 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
         self.ignoreBarrier(self.barrier)
 
     def enterIntroduction(self):
-        self.resetBattles()
-        self.arenaSide = None
-        self.makeBattleOneBattles()
         self.barrier = self.beginBarrier('Introduction', self.involvedToons, 45, self.doneIntroduction)
-        return
 
     def doneIntroduction(self, avIds):
-        self.b_setState('BattleOne')
+        self.b_setState('PrepareBossRound')
 
     def exitIntroduction(self):
         self.ignoreBarrier(self.barrier)
@@ -312,17 +208,13 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
             if toon:
                 toon.b_setCogIndex(-1)
 
-    def enterBattleOne(self):
-        if self.battleA:
-            self.battleA.startBattle(self.toonsA, self.suitsA)
-        if self.battleB:
-            self.battleB.startBattle(self.toonsB, self.suitsB)
+    def enterBossRound(self):
+        pass
 
-    def exitBattleOne(self):
-        self.resetBattles()
+    def exitBossRound(self):
+        pass
 
     def enterReward(self):
-        self.resetBattles()
         self.barrier = self.beginBarrier('Reward', self.involvedToons, BattleBase.BUILDING_REWARD_TIMEOUT, self.__doneReward)
 
     def __doneReward(self, avIds):
@@ -338,106 +230,13 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
         pass
 
     def enterFrolic(self):
-        self.resetBattles()
+        pass
 
     def exitFrolic(self):
         pass
 
-    def resetBattleCounters(self):
-        self.battleNumber = 0
-        self.battleA = None
-        self.battleAId = 0
-        self.battleB = None
-        self.battleBId = 0
-        self.arenaSide = None
-        self.toonSkillPtsGained = {}
-        self.toonExp = {}
-        self.toonOrigQuests = {}
-        self.toonItems = {}
-        self.toonOrigMerits = {}
-        self.toonMerits = {}
-        self.toonParts = {}
-        self.suitsKilled = []
-        self.helpfulToons = []
-        return
-
-    def resetBattles(self):
-        sendReset = 0
-        if self.battleA:
-            self.battleA.requestDelete()
-            self.battleA = None
-            self.battleAId = 0
-            sendReset = 1
-        if self.battleB:
-            self.battleB.requestDelete()
-            self.battleB = None
-            self.battleBId = 0
-            sendReset = 1
-        for suit in self.suitsA + self.suitsB:
-            suit.requestDelete()
-
-        for suit, joinChance in self.reserveSuits:
-            suit.requestDelete()
-
-        self.suitsA = []
-        self.activeSuitsA = []
-        self.suitsB = []
-        self.activeSuitsB = []
-        self.reserveSuits = []
-        self.battleNumber = 0
-        if sendReset:
-            self.sendBattleIds()
-        return
-
     def resetToons(self):
-        if self.toonsA or self.toonsB:
-            self.looseToons = self.looseToons + self.involvedToons
-            self.involvedToons = []
-            self.toonsA = []
-            self.toonsB = []
-            self.sendToonIds()
-
-    def divideToons(self):
-        if self.nerfed:
-            splitMethod = self.__balancedDivide
-        else:
-            splitMethod = self.__randomDivide
-        self.toonsA, self.toonsB, loose = splitMethod()
-        self.looseToons += loose
-        self.sendToonIds()
-
-    def __randomDivide(self):
-        toons = self.involvedToons[:]
-        random.shuffle(toons)
-        numToons = min(len(toons), 8)
-        if numToons >= 5:
-            if numToons < 4:
-                numToonsB = numToons / 2
-            else:
-                numToonsB = (numToons + random.choice([0, 1])) / 2
-        else:
-            numToonsB = 0
-        teamA = toons[numToonsB:numToons]
-        teamB = toons[:numToonsB]
-        loose = toons[numToons:]
-        return (
-         teamA, teamB, loose)
-
-    def __balancedDivide(self):
-        toons = self.involvedToons[:]
-        random.shuffle(toons)
-        teamA, teamB, loose = [], [], []
-        for i, toon in enumerate(sorted(toons, key=self.isToonWearingRentalSuit)):
-            if i < 8:
-                if i % 2 == 0:
-                    teamA.append(toon)
-                else:
-                    teamB.append(toon)
-            else:
-                loose.append(toon)
-
-        return (
-         teamA, teamB, loose)
+        pass
 
     def acceptNewToons(self):
         sourceToons = self.looseToons
@@ -449,168 +248,17 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
             else:
                 self.looseToons.append(toonId)
 
-        for avId in self.involvedToons:
-            toon = self.air.doId2do.get(avId)
-            if toon:
-                p = []
-                for t in ToontownBattleGlobals.Tracks:
-                    p.append(toon.experience.getExp(t))
+        self.sendToonIds()
 
-                self.toonExp[avId] = p
-                self.toonOrigMerits[avId] = toon.cogMerits[:]
-
-        self.divideToons()
-
-    def initializeBattles(self, battleNumber, bossCogPosHpr):
-        self.resetBattles()
-        if not self.involvedToons:
-            self.notify.warning('initializeBattles: no toons!')
-            return
-        self.battleNumber = battleNumber
-        suitHandles = self.generateSuits(battleNumber)
-        self.suitsA = suitHandles['activeSuits']
-        self.activeSuitsA = self.suitsA[:]
-        self.reserveSuits = suitHandles['reserveSuits']
-        suitHandles = self.generateSuits(battleNumber)
-        self.suitsB = suitHandles['activeSuits']
-        self.activeSuitsB = self.suitsB[:]
-        self.reserveSuits += suitHandles['reserveSuits']
-        if self.toonsA:
-            self.battleA = self.makeBattle(bossCogPosHpr, ToontownGlobals.BossCogBattleAPosHpr, self.handleRoundADone, self.handleBattleADone, battleNumber, 0)
-            self.battleAId = self.battleA.doId
-        else:
-            self.moveSuits(self.activeSuitsA)
-            self.suitsA = []
-            self.activeSuitsA = []
-            if self.arenaSide == None:
-                self.b_setArenaSide(0)
-        if self.toonsB:
-            self.battleB = self.makeBattle(bossCogPosHpr, ToontownGlobals.BossCogBattleBPosHpr, self.handleRoundBDone, self.handleBattleBDone, battleNumber, 1)
-            self.battleBId = self.battleB.doId
-        else:
-            self.moveSuits(self.activeSuitsB)
-            self.suitsB = []
-            self.activeSuitsB = []
-            if self.arenaSide == None:
-                self.b_setArenaSide(1)
-        self.sendBattleIds()
-        return
-
-    def makeBattle(self, bossCogPosHpr, battlePosHpr, roundCallback, finishCallback, battleNumber, battleSide):
-        battle = DistributedBattleFinalAI.DistributedBattleFinalAI(self.air, self, roundCallback, finishCallback, battleSide)
-        self.setBattlePos(battle, bossCogPosHpr, battlePosHpr)
-        battle.suitsKilled = self.suitsKilled
-        battle.battleCalc.toonSkillPtsGained = self.toonSkillPtsGained
-        battle.toonExp = self.toonExp
-        battle.toonOrigQuests = self.toonOrigQuests
-        battle.toonItems = self.toonItems
-        battle.toonOrigMerits = self.toonOrigMerits
-        battle.toonMerits = self.toonMerits
-        battle.toonParts = self.toonParts
-        battle.helpfulToons = self.helpfulToons
-        mult = ToontownBattleGlobals.getBossBattleCreditMultiplier(battleNumber)
-        battle.battleCalc.setSkillCreditMultiplier(mult)
-        battle.generateWithRequired(self.zoneId)
-        return battle
-
-    def setBattlePos(self, battle, cogPosHpr, battlePosHpr):
-        bossNode = NodePath('bossNode')
-        bossNode.setPosHpr(*cogPosHpr)
-        battleNode = bossNode.attachNewNode('battleNode')
-        battleNode.setPosHpr(*battlePosHpr)
-        suitNode = battleNode.attachNewNode('suitNode')
-        suitNode.setPos(0, 1, 0)
-        battle.pos = battleNode.getPos(NodePath())
-        battle.initialSuitPos = suitNode.getPos(NodePath())
-
-    def moveSuits(self, active):
-        for suit in active:
-            self.reserveSuits.append((suit, 0))
-
-    def handleRoundADone(self, toonIds, totalHp, deadSuits):
-        if self.battleA:
-            self.handleRoundDone(self.battleA, self.suitsA, self.activeSuitsA, toonIds, totalHp, deadSuits)
-
-    def handleRoundBDone(self, toonIds, totalHp, deadSuits):
-        if self.battleB:
-            self.handleRoundDone(self.battleB, self.suitsB, self.activeSuitsB, toonIds, totalHp, deadSuits)
-
-    def handleBattleADone(self, zoneId, toonIds):
-        if self.battleA:
-            self.battleA.requestDelete()
-            self.battleA = None
-            self.battleAId = 0
-            self.sendBattleIds()
-        if self.arenaSide == None:
-            self.b_setArenaSide(0)
-        if not self.battleB and self.hasToons() and self.hasToonsAlive():
-            self.b_setState(self.postBattleState)
-        return
-
-    def handleBattleBDone(self, zoneId, toonIds):
-        if self.battleB:
-            self.battleB.requestDelete()
-            self.battleB = None
-            self.battleBId = 0
-            self.sendBattleIds()
-        if self.arenaSide == None:
-            self.b_setArenaSide(1)
-        if not self.battleA and self.hasToons() and self.hasToonsAlive():
-            self.b_setState(self.postBattleState)
-        return
-
-    def invokeSuitPlanner(self, buildingCode, skelecog):
-        planner = SuitPlannerInteriorAI.SuitPlannerInteriorAI(1, buildingCode, self.dna.dept, self.zoneId)
-        planner.respectInvasions = 0
-        suits = planner.genFloorSuits(0)
-        if skelecog != 0:
-            for suit in suits['activeSuits']:
-                suit.b_setSkelecog(1)
-                if skelecog == 2:
-                    suit.b_setVirtual(1)
-
-            for reserve in suits['reserveSuits']:
-                suit = reserve[0]
-                suit.b_setSkelecog(1)
-                if skelecog == 2:
-                    suit.b_setVirtual(1)
-
-        return suits
-
-    def generateSuits(self, battleNumber):
-        raise StandardError, 'generateSuits unimplemented'
-
-    def handleRoundDone(self, battle, suits, activeSuits, toonIds, totalHp, deadSuits):
-        totalMaxHp = 0
-        for suit in suits:
-            totalMaxHp += suit.maxHP
-
-        for suit in deadSuits:
-            activeSuits.remove(suit)
-
-        joinedReserves = []
-        if len(self.reserveSuits) > 0 and len(activeSuits) < 4:
-            hpPercent = 100 - totalHp / totalMaxHp * 100.0
-            for info in self.reserveSuits:
-                if info[1] <= hpPercent and len(activeSuits) < 4:
-                    suits.append(info[0])
-                    activeSuits.append(info[0])
-                    joinedReserves.append(info)
-
-            for info in joinedReserves:
-                self.reserveSuits.remove(info)
-
-        battle.resume(joinedReserves)
-
-    def getBattleThreeTime(self):
-        elapsed = globalClock.getFrameTime() - self.battleThreeStart
-        t1 = elapsed / float(self.battleThreeDuration)
+    def getBossRoundTime(self):
+        elapsed = globalClock.getFrameTime() - self.bossRoundStart
+        t1 = elapsed / float(self.bossRoundDuration)
         return t1
 
     def progressValue(self, fromValue, toValue):
         t0 = float(self.bossDamage) / float(self.bossMaxDamage)
-        elapsed = globalClock.getFrameTime() - self.battleThreeStart
-        t1 = elapsed / float(self.battleThreeDuration)
+        elapsed = globalClock.getFrameTime() - self.bossRoundStart
+        t1 = elapsed / float(self.bossRoundDuration)
         t = max(t0, t1)
         return fromValue + (toValue - fromValue) * min(t, 1)
 
@@ -658,7 +306,7 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
             damage = max(int(damage), 1)
             self.damageToon(toon, damage)
             currState = self.getCurrentOrNextState()
-            if attackCode == ToontownGlobals.BossCogElectricFence and (currState == 'RollToBattleTwo' or currState == 'BattleThree'):
+            if attackCode == ToontownGlobals.BossCogElectricFence and currState == 'BossRound':
                 if bpy < 0 and abs(bpx / bpy) > 0.5:
                     if bpx < 0:
                         self.b_setAttackCode(ToontownGlobals.BossCogSwatRight)
@@ -695,7 +343,7 @@ class DistributedBossCogAI(DistributedAvatarAI.DistributedAvatarAI):
 
     def waitForNextAttack(self, delayTime):
         currState = self.getCurrentOrNextState()
-        if currState == 'BattleThree':
+        if currState == 'BossRound':
             taskName = self.uniqueName('NextAttack')
             taskMgr.remove(taskName)
             taskMgr.doMethodLater(delayTime, self.doNextAttack, taskName)

@@ -655,7 +655,7 @@ class DistributedBossbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
     def progressValue(self, fromValue, toValue):
         t0 = float(self.bossDamage) / float(self.bossMaxDamage)
         elapsed = globalClock.getFrameTime() - self.battleFourStart
-        t1 = elapsed / float(self.battleThreeDuration)
+        t1 = elapsed / float(self.bossRoundDuration)
         t = max(t0, t1)
         progVal = fromValue + (toValue - fromValue) * min(t, 1)
         self.notify.debug('progVal=%s' % progVal)

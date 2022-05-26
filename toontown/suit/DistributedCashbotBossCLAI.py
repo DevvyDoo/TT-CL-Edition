@@ -8,8 +8,8 @@ class DistributedCashbotBossCLAI(DistributedCashbotBossAI.DistributedCashbotBoss
     def __init__(self, air):
         DistributedCashbotBossAI.DistributedCashbotBossAI.__init__(self, air)
 
-    def enterPrepareBattleThree(self):
-        super(DistributedCashbotBossCLAI, self).enterPrepareBattleThree()
+    def enterPrepareBossRound(self):
+        super(DistributedCashbotBossCLAI, self).enterPrepareBossRound()
 
         # Only the first two toons are considered active participants
         if len(self.involvedToons) > 2:

@@ -1231,7 +1231,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
                     if place.fsm.getCurrentState().getName() == 'crane':
                         place.setState('finalBattle')
                         
-            self.boss.toFinalBattleMode()
+            self.boss.toBossBattleMode()
 
             # Go back to the defined setting for FOV effects
             base.WANT_FOV_EFFECTS = base.settings.getBool('game', 'fovEffects', True)

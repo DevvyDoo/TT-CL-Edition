@@ -1789,8 +1789,8 @@ class rcr(MagicWord):
 
         battle = battle.lower()
         boss.exitIntroduction()
-        boss.b_setState('PrepareBattleThree')
-        boss.b_setState('BattleThree')
+        boss.b_setState('PrepareBossRound')
+        # boss.b_setState('BattleThree')
         return "Restarting Crane Round"
 
 class spectate(MagicWord):

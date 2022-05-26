@@ -565,7 +565,7 @@ class DistributedBanquetTable(DistributedObject.DistributedObject, FSM.FSM, Banq
 
     def safeBossToFinalBattleMode(self):
         if self.boss:
-            self.boss.toFinalBattleMode()
+            self.boss.toBossBattleMode()
 
     def goToFinalBattle(self):
         if self.cr:

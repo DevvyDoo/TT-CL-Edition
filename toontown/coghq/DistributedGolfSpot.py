@@ -558,7 +558,7 @@ class DistributedGolfSpot(DistributedObject.DistributedObject, FSM.FSM):
 
     def safeBossToFinalBattleMode(self):
         if self.boss:
-            self.boss.toFinalBattleMode()
+            self.boss.toBossBattleMode()
 
     def goToFinalBattle(self):
         if self.cr:
