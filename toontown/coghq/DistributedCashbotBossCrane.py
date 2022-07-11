@@ -1263,6 +1263,9 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.trigger.unstash()
             self.accept(self.triggerEvent, self.__hitTrigger)
             
+        if self.heldObject:
+            self.dropObject(self.heldObject)
+            
         avLeaving = self.avId
         self.avId = 0
         messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
