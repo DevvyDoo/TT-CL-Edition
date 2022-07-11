@@ -834,14 +834,14 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if obj.state == 'Grabbed':
             return
    
-        if obj and obj.state != 'LocalDropped' and (obj.state != 'Dropped' or obj.craneId != self.doId):
+        if obj and (obj.state != 'Dropped' or obj.craneId != self.doId):
             self.boss.craneStatesDebug(doId=self.doId, content='Sniffed something, held obj %s' % (
                 self.heldObject.getName() if self.heldObject else "Nothing"))
             
             obj.d_requestGrab()
             # See if we should do anything with this object when sniffing it
-            obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
             self.considerObjectState(obj)
+            obj.demand('Grabbed', localAvatar.doId, self.doId)
 
     def considerObjectState(self, obj):
 
@@ -940,7 +940,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
                 # because we can't start broadcasting updates on the
                 # object's position until we *know* we're the object's
                 # owner.
-                obj.demand('LocalDropped', localAvatar.doId, self.doId)
+                obj.demand('Dropped', localAvatar.doId, self.doId)
 
         if self.boss:
             self.boss.craneStatesDebug(doId=self.doId,
@@ -1200,6 +1200,9 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
 
     def exitControlled(self):
+        if self.heldObject:
+            self.dropObject(self.heldObject)
+    
         self.ignore('exitCrane')
         
         self.grabTrack.finish()
