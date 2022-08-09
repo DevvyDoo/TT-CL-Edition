@@ -708,6 +708,14 @@ SellbotBossP3PosA = (-50, 40, 18)
 SellbotBossTopRampPosB = (80, -35, 18)
 SellbotBossTopRampTurnPosB = (80, 10, 18)
 SellbotBossP3PosB = (50, 60, 18)
+SellbotToonsBattleThreeStartPosHpr = [(-31.5, 55.5, 18, -75, 0, 0),
+ (-31.5, 58.5, 18, -85, 0, 0),
+ (-31.5, 61.5, 18, -95, 0, 0),
+ (-31.5, 64.5, 18, -105, 0, 0),
+ (31.5, 55.5, 18, 105, 0, 0),
+ (31.5, 58.5, 18, 95, 0, 0),
+ (31.5, -61.5, 18, 85, 0, 0),
+ (31.5, 64.5, 18, 75, 0, 0)]
 CashbotBossMaxDamage = 1500
 CashbotBossOffstagePosHpr = (120,
  -195,

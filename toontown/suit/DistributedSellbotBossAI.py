@@ -38,7 +38,6 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.recoverStartTime = 0
 
     def generateWithRequired(self, zoneId):
-        self.numRentalDiguises, self.numNormalDiguises = self.countDisguises()
         self.__setCagedToonNpcId()
         DistributedBossCogAI.DistributedBossCogAI.generateWithRequired(self, zoneId)
 
@@ -50,20 +49,11 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         return ToontownGlobals.SellbotHQ
 
     def getCagedToonNpcId(self):
+        self.cagedToonNpcId = random.choice(NPCToons.npcFriendsMinMaxStars(3, 5))
         return self.cagedToonNpcId
 
     def __setCagedToonNpcId(self):
-
-        def npcFriendsMaxStars(stars):
-            return [ id for id in NPCToons.npcFriends.keys() if NPCToons.getNPCTrackLevelHpRarity(id)[3] <= stars ]
-
-        if self.numRentalDiguises >= 4:
-            self.cagedToonNpcId = random.choice(NPCToons.npcFriendsMinMaxStars(3, 3))
-        else:
-            if 1 <= self.numRentalDiguises <= 3:
-                self.cagedToonNpcId = random.choice(NPCToons.npcFriendsMinMaxStars(3, 4))
-            else:
-                self.cagedToonNpcId = random.choice(NPCToons.npcFriendsMinMaxStars(3, 5))
+        self.cagedToonNpcId = random.choice(NPCToons.npcFriendsMinMaxStars(3, 5))
 
     def magicWordHit(self, damage, avId):
         if self.attackCode != ToontownGlobals.BossCogDizzyNow:
@@ -79,7 +69,7 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         if bossDamage < 1:
             return
         currState = self.getCurrentOrNextState()
-        if currState != 'BattleThree':
+        if currState != 'BossRound':
             return
         if self.attackCode != ToontownGlobals.BossCogDizzyNow:
             return
@@ -95,7 +85,7 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         if not self.validate(avId, avId in self.involvedToons, 'hitBossInsides from unknown avatar'):
             return
         currState = self.getCurrentOrNextState()
-        if currState != 'BattleThree':
+        if currState != 'BossRound':
             return
         self.b_setAttackCode(ToontownGlobals.BossCogDizzyNow)
         self.b_setBossDamage(self.getBossDamage(), 0, 0)
@@ -119,7 +109,7 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
     def touchCage(self):
         avId = self.air.getAvatarIdFromSender()
         currState = self.getCurrentOrNextState()
-        if currState != 'BattleThree' and currState != 'NearVictory':
+        if currState != 'BossRound' and currState != 'NearVictory':
             return
         if not self.validate(avId, avId in self.involvedToons, 'touchCage from unknown avatar'):
             return
@@ -183,7 +173,7 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
     def waitForNextStrafe(self, delayTime):
         currState = self.getCurrentOrNextState()
-        if currState == 'BattleThree':
+        if currState == 'BossRound':
             taskName = self.uniqueName('NextStrafe')
             taskMgr.remove(taskName)
             taskMgr.doMethodLater(delayTime, self.doNextStrafe, taskName)
@@ -207,8 +197,9 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
         self.sendUpdate('setDooberIds', [dooberIds])
 
-    def d_cagedToonBattleThree(self, index, avId):
-        self.sendUpdate('cagedToonBattleThree', [index, avId])
+    def d_cagedToonBossRound(self, index, avId):
+        #self.sendUpdate('CagedToonBattleThree', [index, avId])
+        pass
 
     def formatReward(self):
         return str(self.cagedToonNpcId)
@@ -254,53 +245,19 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         DistributedBossCogAI.DistributedBossCogAI.exitIntroduction(self)
         self.__resetDoobers()
 
-    def enterRollToBattleTwo(self):
-        self.divideToons()
-        self.barrier = self.beginBarrier('RollToBattleTwo', self.involvedToons, 45, self.__doneRollToBattleTwo)
+    def enterPrepareBossRound(self):
+        self.barrier = self.beginBarrier('PrepareBossRound', self.involvedToons, 30, self.__donePrepareBossRound)
 
-    def __doneRollToBattleTwo(self, avIds):
-        self.b_setState('PrepareBattleTwo')
+    def __donePrepareBossRound(self, avIds):
+        self.b_setState('BossRound')
 
-    def exitRollToBattleTwo(self):
+    def exitPrepareBossRound(self):
         self.ignoreBarrier(self.barrier)
 
-    def enterPrepareBattleTwo(self):
-        self.barrier = self.beginBarrier('PrepareBattleTwo', self.involvedToons, 30, self.__donePrepareBattleTwo)
-        self.makeBattleTwoBattles()
-
-    def __donePrepareBattleTwo(self, avIds):
-        self.b_setState('BattleTwo')
-
-    def exitPrepareBattleTwo(self):
-        self.ignoreBarrier(self.barrier)
-
-    def makeBattleTwoBattles(self):
-        self.postBattleState = 'PrepareBattleThree'
-        self.initializeBattles(2, ToontownGlobals.SellbotBossBattleTwoPosHpr)
-
-    def enterBattleTwo(self):
-        if self.battleA:
-            self.battleA.startBattle(self.toonsA, self.suitsA)
-        if self.battleB:
-            self.battleB.startBattle(self.toonsB, self.suitsB)
-
-    def exitBattleTwo(self):
-        self.resetBattles()
-
-    def enterPrepareBattleThree(self):
-        self.barrier = self.beginBarrier('PrepareBattleThree', self.involvedToons, 30, self.__donePrepareBattleThree)
-
-    def __donePrepareBattleThree(self, avIds):
-        self.b_setState('BattleThree')
-
-    def exitPrepareBattleThree(self):
-        self.ignoreBarrier(self.barrier)
-
-    def enterBattleThree(self):
-        self.resetBattles()
+    def enterBossRound(self):
         self.setPieType()
         self.b_setBossDamage(0, 0, 0)
-        self.battleThreeStart = globalClock.getFrameTime()
+        self.BossRoundStart = globalClock.getFrameTime()
         for toonId in self.involvedToons:
             toon = simbase.air.doId2do.get(toonId)
             if toon:
@@ -327,7 +284,7 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         else:
             index = random.randrange(20, TTLocalizer.CagedToonBattleThreeMaxTouchCage + 1)
         if index:
-            self.d_cagedToonBattleThree(index, avId)
+            self.d_cagedToonBossRound(index, avId)
         self.__saySomethingLater()
         return
 
@@ -338,13 +295,13 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
     def __goodJump(self, avId):
         currState = self.getCurrentOrNextState()
-        if currState != 'BattleThree':
+        if currState != 'BossRound':
             return
         index = random.randrange(10, TTLocalizer.CagedToonBattleThreeMaxGivePies + 1)
-        self.d_cagedToonBattleThree(index, avId)
+        self.d_cagedToonBossRound(index, avId)
         self.__saySomethingLater()
 
-    def exitBattleThree(self):
+    def exitBossRound(self):
         self.stopAttacks()
         self.stopStrafes()
         taskName = self.uniqueName('CagedToonSaySomething')
@@ -355,37 +312,17 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.pieTime = globalClock.getFrameTime()
         for doId, do in simbase.air.doId2do.items():
             if str(doId)[0] != str(simbase.air.districtId)[0]:
-                do.d_setSystemMessage(0, "Crane Round Ended In {0:.5f}s".format(self.pieTime - self.battleThreeStart))
-        self.resetBattles()
+                do.d_setSystemMessage(0, "Crane Round Ended In {0:.5f}s".format(self.pieTime - self.BossRoundStart))
 
     def exitNearVictory(self):
         pass
 
     def enterVictory(self):
-        self.resetBattles()
-        self.suitsKilled.append({'type': None, 'level': None, 'track': self.dna.dept, 'isSkelecog': 0, 'isForeman': 0, 'isVP': 1, 'isCFO': 0, 'isSupervisor': 0, 'isVirtual': 0, 'activeToons': self.involvedToons[:]})
         self.barrier = self.beginBarrier('Victory', self.involvedToons, 10, self.__doneVictory)
         return
 
     def __doneVictory(self, avIds):
-        self.d_setBattleExperience()
         self.b_setState('Reward')
-        BattleExperienceAI.assignRewards(self.involvedToons, self.toonSkillPtsGained, self.suitsKilled, ToontownGlobals.dept2cogHQ(self.dept), self.helpfulToons)
-        for toonId in self.involvedToons:
-            toon = self.air.doId2do.get(toonId)
-            if toon:
-                configMax = simbase.config.GetInt('max-sos-cards', 16)
-                if configMax == 8:
-                    maxNumCalls = 1
-                else:
-                    maxNumCalls = 2
-                if not toon.attemptAddNPCFriend(self.cagedToonNpcId, numCalls=maxNumCalls):
-                    self.notify.info('%s.unable to add NPCFriend %s to %s.' % (self.doId, self.cagedToonNpcId, toonId))
-                if self.__shouldPromoteToon(toon):
-                    toon.b_promote(self.deptIndex)
-                    self.sendUpdateToAvatarId(toonId, 'toonPromoted', [1])
-                else:
-                    self.sendUpdateToAvatarId(toonId, 'toonPromoted', [0])
 
     def __shouldPromoteToon(self, toon):
         if not toon.readyForPromotion(self.deptIndex):

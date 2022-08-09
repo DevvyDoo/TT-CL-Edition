@@ -615,7 +615,7 @@ class SetHpr(MagicWord):
                 base.localAvatar.getPart(part, lod).setH(toonH)
 
         base.localAvatar.setHpr(args[0], args[1], args[2])
-		
+
 class PrintPosHpr(MagicWord):
     aliases = ['pph']
     desc = "Print Pos Hpr"
@@ -630,16 +630,16 @@ class PrintPosHpr(MagicWord):
                 taskMgr.doMethodLater(0.1, printPosHpr, "print the damn points", extraArgs=[count])
             else:
                 return
-                
-        printPosHpr(0)  
-        
-		
+
+        printPosHpr(0)
+
+
 class camera(MagicWord):
     aliases = ['cam']
     desc = "Set a movie sequence"
     execLocation = MagicWordConfig.EXEC_LOC_CLIENT
     arguments = [("command", str, True), ("x", float, False, 0), ("y", float, False, 0), ("z", float, False, 0), ("h", float, False, 0), ("p", float, False, 0), ("r", float, False, 0), ("duration", float, False, 1)]
-    
+
     def handleWord(self, invoker, avId, toon, *args):
         command = args[0]
         x = args[1]
@@ -700,7 +700,7 @@ class pc(MagicWord):
     aliases = ['cacascasc']
     desc = "Set a movie sequence"
     execLocation = MagicWordConfig.EXEC_LOC_CLIENT
-    
+
     def handleWord(self, invoker, avId, toon, *args):
         print(base.camera)
         print(base.localAvatar.camera)
@@ -1200,7 +1200,7 @@ class SetTopColor(MagicWord):
             return "Invalid shirt color specified!"
         dna.topTexColor = topTexColor
         toon.b_setDNAString(dna.makeNetString())
-		
+
 
 class SetSleeves(MagicWord):
     aliases = ["sleeves"]
@@ -1235,7 +1235,7 @@ class SetSleevesColor(MagicWord):
             return "Invalid sleeves color specified!"
         dna.sleeveTexColor = sleeveTexColor
         toon.b_setDNAString(dna.makeNetString())
-		
+
 
 class SetBottoms(MagicWord):
     aliases = ["bottoms"]
@@ -1246,7 +1246,7 @@ class SetBottoms(MagicWord):
     def handleWord(self, invoker, avId, toon, *args):
         dna = ToonDNA.ToonDNA()
         dna.makeFromNetString(toon.getDNAString())
-		
+
         if dna.gender == 'm':
             bottoms = ToonDNA.BoyShorts
         elif dna.gender == 'f':
@@ -2075,7 +2075,7 @@ class setCraneSpawn(MagicWord):
             return "You aren't in a CFO!"
         if not (1 <= spawn <= 8):
             return "Incorrect spawn position, please enter between 1 to 8!"
-			
+
         boss.wantCustomCraneSpawns = True
         boss.d_setCraneSpawn(True, args[0]-1, invoker.doId)
 
@@ -2105,7 +2105,7 @@ class safeRush(MagicWord):
             boss.wantSafeRushPractice = True
             return ("Safe Rush => ON")
 
-        
+
 class aim(MagicWord):
     desc = "Resets the locations of the safes"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
@@ -2126,7 +2126,7 @@ class aim(MagicWord):
         safes = args[0]
         if not (0 <= safes <= 8):
             return "Invalid # of safes, try a number between 0 and 8 :)"
-        
+
         if boss.state not in ('PrepareBattleThree', 'BattleThree'):
             return "Need to be in a crane round to use!"
 
@@ -2201,7 +2201,7 @@ class SkipCJ(MagicWord):
                 boss.enterNearVictory()
                 boss.b_setState('Victory')
                 return "Skipping final round..."
-				
+
 class Stun(MagicWord):
     desc = "Stuns all the lawyers in the CJ Evidence round."
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
@@ -2314,24 +2314,10 @@ class SkipVP(MagicWord):
             return "You aren't in a VP!"
 
         battle = battle.lower()
-
-        if battle == 'three':
-            if boss.state in ('PrepareBattleThree', 'BattleThree'):
-                return "You can not return to previous rounds!"
-            else:
-                boss.exitIntroduction()
-                boss.b_setState('PrepareBattleThree')
-                return "Skipping to final round..."
-
         if battle == 'next':
-            if boss.state in ('PrepareBattleOne', 'BattleOne'):
-                boss.exitIntroduction()
-                boss.b_setState('PrepareBattleThree')
-                return "Skipping current round..."
-            elif boss.state in ('PrepareBattleThree', 'BattleThree'):
-                boss.exitIntroduction()
-                boss.b_setState('Victory')
-                return "Skipping final round..."
+            boss.exitIntroduction()
+            boss.b_setState('Victory')
+            return "Skipping final round..."
 
 
 class rpr(MagicWord):
@@ -2352,11 +2338,12 @@ class rpr(MagicWord):
         if not boss:
             return "You aren't in a VP!"
 
+        if boss.state == 'Elevator':
+            boss.sendUpdate('setState', ['Introduction'])
+
         battle = battle.lower()
         boss.exitIntroduction()
-        boss.b_setState('PrepareBattleTwo')
-        boss.b_setState('BattleTwo')
-        boss.b_setState('PrepareBattleThree')
+        boss.b_setState('PrepareBossRound')
         return "Restarting Pie Round"
 
 

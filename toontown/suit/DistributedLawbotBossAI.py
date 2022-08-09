@@ -44,8 +44,6 @@ class DistributedLawbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FSM
         self.numToonJurorsSeated = 0
         self.cannonBallsLeft = {}
         self.toonLevels = 0
-        if 'Defeat' not in self.keyStates:
-            self.keyStates.append('Defeat')
         self.toonupValue = 1
         self.bonusState = False
         self.bonusTimeStarted = 0
@@ -221,7 +219,7 @@ class DistributedLawbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FSM
     def doNextAttack(self, task):
         for lawyer in self.lawyers:
             lawyer.doNextAttack(self)
-            
+
         self.waitForNextAttack(ToontownGlobals.LawbotBossLawyerCycleTime)
         timeSinceLastAttack = globalClock.getFrameTime() - self.lastAreaAttackTime
         allowedByTime = 15 < timeSinceLastAttack or self.lastAreaAttackTime == 0
@@ -247,7 +245,7 @@ class DistributedLawbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FSM
              ToontownGlobals.BossCogDirectedAttack,
              ToontownGlobals.BossCogDirectedAttack,
              ToontownGlobals.BossCogDirectedAttack])
-        if attackCode == ToontownGlobals.BossCogAreaAttack: 
+        if attackCode == ToontownGlobals.BossCogAreaAttack:
             self.__doAreaAttack()
         elif attackCode == ToontownGlobals.BossCogDirectedAttack:
             self.__doDirectedAttack()
@@ -313,10 +311,6 @@ class DistributedLawbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FSM
 
     def formatReward(self):
         return str(self.cagedToonNpcId)
-
-    def makeBattleOneBattles(self):
-        self.postBattleState = 'RollToBattleTwo'
-        self.initializeBattles(1, ToontownGlobals.LawbotBossBattleOnePosHpr)
 
     def generateSuits(self, battleNumber):
         if battleNumber == 1:
@@ -938,7 +932,7 @@ class DistributedLawbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FSM
 
         taskMgr.doMethodLater(ToontownGlobals.LawbotBossBonusDuration, self.clearBonus, self.uniqueName('clearBonus'))
         self.sendUpdate('enteredBonusState', [])
-        
+
         #Whisper out the time from the start of CJ
         self.bonusTimeStarted = globalClock.getFrameTime()
         for doId, do in simbase.air.doId2do.items():
