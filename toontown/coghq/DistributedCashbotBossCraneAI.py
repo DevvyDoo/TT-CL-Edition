@@ -112,7 +112,7 @@ class DistributedCashbotBossCraneAI(DistributedObjectAI.DistributedObjectAI, FSM
             # This will be filled in if an object has requested a
             # grab.  In this case, drop the object.
             obj = self.air.doId2do[self.objectId]
-            obj.request('Dropped', self.avId, self.doId)
+            obj.demand('Dropped', self.avId, self.doId)
 
     def enterFree(self):
         self.avId = 0
