@@ -293,7 +293,7 @@ class RaceWinningsPanel(DirectFrame):
         else:
             self.circuitTotalLabel.stash()
             self.raceTotalLabel.unstash()
-        if ToontownGlobals.KARTING_TICKETS_HOLIDAY not in base.cr.newsManager.getHolidayIdList() or self.race.raceType != RaceGlobals.Practice:
+        if self.race.raceType != RaceGlobals.Practice:
             self.doubleTicketsLabel.stash()
         if ticBonus:
             ticketSeq.append(Sequence(Func(self.ticketFrame.hide), Func(self.bonusFrame.show), Func(self.trophyFrame.hide), Func(self.bonusComponents[0].configure, text=wrapStr(TTLocalizer.KartRace_RecordString % (TTLocalizer.KartRecordStrings[bonusType], TTLocalizer.KartRace_TrackNames[track], str(ticBonus)))), Wait(3)))

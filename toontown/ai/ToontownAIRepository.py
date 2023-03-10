@@ -12,8 +12,6 @@ from otp.friends.FriendManagerAI import FriendManagerAI
 from otp.otpbase import OTPGlobals
 from toontown.ai.DistributedPolarPlaceEffectMgrAI import DistributedPolarPlaceEffectMgrAI
 from toontown.ai.DistributedResistanceEmoteMgrAI import DistributedResistanceEmoteMgrAI
-from toontown.ai.HolidayManagerAI import HolidayManagerAI
-from toontown.ai.NewsManagerAI import NewsManagerAI
 from toontown.ai.WelcomeValleyManagerAI import WelcomeValleyManagerAI
 from toontown.building.DistributedTrophyMgrAI import DistributedTrophyMgrAI
 from toontown.catalog.CatalogManagerAI import CatalogManagerAI
@@ -76,8 +74,6 @@ class ToontownAIRepository(ToontownInternalRepository):
         self.district = None
         self.districtStats = None
         self.timeManager = None
-        self.newsManager = None
-        self.holidayManager = None
         self.welcomeValleyManager = None
         self.catalogManager = None
         self.zoneDataStore = None
@@ -157,8 +153,6 @@ class ToontownAIRepository(ToontownInternalRepository):
         Creates "local" objects.
         """
 
-        # Create our holiday manager...
-        self.holidayManager = HolidayManagerAI(self)
 
         # Create our zone data store...
         self.zoneDataStore = AIZoneDataStore()
@@ -221,10 +215,6 @@ class ToontownAIRepository(ToontownInternalRepository):
         # Generate our time manager...
         self.timeManager = TimeManagerAI(self)
         self.timeManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
-
-        # Generate our news manager...
-        self.newsManager = NewsManagerAI(self)
-        self.newsManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
 
         # Generate our Welcome Valley manager...
         self.welcomeValleyManager = WelcomeValleyManagerAI(self)

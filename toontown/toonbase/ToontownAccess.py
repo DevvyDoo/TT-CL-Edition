@@ -49,10 +49,6 @@ class ToontownAccess:
          ToontownGlobals.GoofySpeedway,
          ToontownGlobals.Tutorial]
         specialZones = [ToontownGlobals.SellbotLobby]
-        if hasattr(base.cr, 'newsManager') and base.cr.newsManager:
-            holidayIds = base.cr.newsManager.getHolidayIdList()
-            if ToontownGlobals.SELLBOT_NERF_HOLIDAY in holidayIds:
-                specialZones.append(ToontownGlobals.SellbotHQ)
         place = base.cr.playGame.getPlace()
         if zoneId:
             myHoodId = ZoneUtil.getCanonicalHoodId(zoneId)

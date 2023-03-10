@@ -12,7 +12,6 @@ from toontown.toon import DeathForceAcknowledge
 from toontown.toon import HealthForceAcknowledge
 from toontown.tutorial import TutorialForceAcknowledge
 from toontown.toon import NPCForceAcknowledge
-from toontown.trolley import Trolley
 from toontown.toontowngui import TTDialog
 from toontown.toonbase import ToontownGlobals
 from toontown.toon.Toon import teleportDebug
@@ -78,10 +77,6 @@ class Playground(Place.Place):
                             'walk',
                             'DFA',
                             'trialerFA']),
-            State.State('trolley',
-                        self.enterTrolley,
-                        self.exitTrolley, [
-                            'walk']),
             State.State('doorIn',
                         self.enterDoorIn,
                         self.exitDoorIn, [
@@ -190,7 +185,6 @@ class Playground(Place.Place):
             'start', 'final')
         self.parentFSM = parentFSM
         self.tunnelOriginList = []
-        self.trolleyDoneEvent = 'trolleyDone'
         self.hfaDoneEvent = 'hfaDoneEvent'
         self.npcfaDoneEvent = 'npcfaDoneEvent'
         self.dialog = None
@@ -216,21 +210,6 @@ class Playground(Place.Place):
             self.loader.hood.halloweenLights += geom.findAllMatches('**/prop_snow_tree*')
             for light in self.loader.hood.halloweenLights:
                 light.setColorScaleOff(0)
-
-        newsManager = base.cr.newsManager
-        if newsManager:
-            holidayIds = base.cr.newsManager.getDecorationHolidayId()
-            if (ToontownGlobals.HALLOWEEN_COSTUMES in holidayIds or ToontownGlobals.SPOOKY_COSTUMES in holidayIds) and self.loader.hood.spookySkyFile:
-                lightsOff = Sequence(LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(0.55, 0.55, 0.65, 1)), Func(self.loader.hood.startSpookySky), Func(__lightDecorationOn__))
-                lightsOff.start()
-            else:
-                self.loader.hood.startSky()
-                lightsOn = LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(1, 1, 1, 1))
-                lightsOn.start()
-        else:
-            self.loader.hood.startSky()
-            lightsOn = LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(1, 1, 1, 1))
-            lightsOn.start()
         NametagGlobals.setMasterArrowsOn(1)
         self.zoneId = requestStatus['zoneId']
         self.tunnelOriginList = base.cr.hoodMgr.addLinkTunnelHooks(self, self.loader.nodeList, self.zoneId)
@@ -254,7 +233,6 @@ class Playground(Place.Place):
             for light in self.loader.hood.halloweenLights:
                 light.reparentTo(hidden)
 
-        newsManager = base.cr.newsManager
         NametagGlobals.setMasterArrowsOn(0)
         for i in self.loader.nodeList:
             self.loader.exitAnimatedProps(i)
@@ -317,45 +295,6 @@ class Playground(Place.Place):
         np.setPos(point[0], point[1], point[2])
         np.setScale(4.0)
         np.setBillboardPointEye()
-
-    def enterTrolley(self):
-        base.localAvatar.laffMeter.start()
-        base.localAvatar.b_setAnimState('off', 1)
-        base.localAvatar.cantLeaveGame = 1
-        self.accept(self.trolleyDoneEvent, self.handleTrolleyDone)
-        self.trolley = Trolley.Trolley(self, self.fsm, self.trolleyDoneEvent)
-        self.trolley.load()
-        self.trolley.enter()
-
-    def exitTrolley(self):
-        base.localAvatar.laffMeter.stop()
-        base.localAvatar.cantLeaveGame = 0
-        self.ignore(self.trolleyDoneEvent)
-        self.trolley.unload()
-        self.trolley.exit()
-        del self.trolley
-
-    def detectedTrolleyCollision(self):
-        self.fsm.request('trolley')
-
-    def handleTrolleyDone(self, doneStatus):
-        self.notify.debug('handling trolley done event')
-        mode = doneStatus['mode']
-        if mode == 'reject':
-            self.fsm.request('walk')
-        elif mode == 'exit':
-            self.fsm.request('walk')
-        elif mode == 'minigame':
-            self.doneStatus = {'loader': 'minigame',
-             'where': 'minigame',
-             'hoodId': self.loader.hood.id,
-             'zoneId': doneStatus['zoneId'],
-             'shardId': None,
-             'minigameId': doneStatus['minigameId']}
-            messenger.send(self.doneEvent)
-        else:
-            self.notify.error('Unknown mode: ' + mode + ' in handleTrolleyDone')
-        return
 
     def debugStartMinigame(self, zoneId, minigameId):
         self.doneStatus = {'loader': 'minigame',

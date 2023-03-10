@@ -64,7 +64,6 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.strafeInterval = None
         self.onscreenMessage = None
         self.toonMopathInterval = []
-        self.nerfed = ToontownGlobals.SELLBOT_NERF_HOLIDAY in base.cr.newsManager.getHolidayIdList()
         self.localToonPromoted = True
         self.resetMaxDamage()
         return
@@ -154,10 +153,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         return
 
     def resetMaxDamage(self):
-        if self.nerfed:
-            self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamageNerfed
-        else:
-            self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamage
+        self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamage
 
     def d_hitBoss(self, bossDamage):
         self.sendUpdate('hitBoss', [bossDamage])

@@ -105,54 +105,27 @@ class Estate(Place.Place):
     def enter(self, requestStatus):
         hoodId = requestStatus['hoodId']
         zoneId = requestStatus['zoneId']
-        newsManager = base.cr.newsManager
         if config.GetBool('want-estate-telemetry-limiter', 1):
             limiter = TLGatherAllAvs('Estate', RotationLimitToH)
         else:
             limiter = TLNull()
         self._telemLimiter = limiter
-        if newsManager:
-            holidayIds = base.cr.newsManager.getDecorationHolidayId()
-            if (ToontownGlobals.HALLOWEEN_COSTUMES in holidayIds or ToontownGlobals.SPOOKY_COSTUMES in holidayIds) and self.loader.hood.spookySkyFile:
-                lightsOff = Sequence(LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(0.55, 0.55, 0.65, 1)), Func(self.loader.hood.startSpookySky))
-                lightsOff.start()
-            else:
-                self.loader.hood.startSky()
-                lightsOn = LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(1, 1, 1, 1))
-                lightsOn.start()
-        else:
-            self.loader.hood.startSky()
-            lightsOn = LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(1, 1, 1, 1))
-            lightsOn.start()
+        self.loader.hood.startSky()
+        lightsOn = LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(1, 1, 1, 1))
+        lightsOn.start()
         self.loader.hood.sky.setFogOff()
         self.__setFaintFog()
         for i in self.loader.nodeList:
             self.loader.enterAnimatedProps(i)
 
         self.loader.geom.reparentTo(render)
-        if hasattr(base.cr, 'newsManager') and base.cr.newsManager:
-            holidayIds = base.cr.newsManager.getHolidayIdList()
-            if ToontownGlobals.APRIL_FOOLS_COSTUMES in holidayIds or ToontownGlobals.SILLYMETER_EXT_HOLIDAY in holidayIds:
-                self.startAprilFoolsControls()
         self.accept('doorDoneEvent', self.handleDoorDoneEvent)
         self.accept('DistributedDoor_doorTrigger', self.handleDoorTrigger)
         base.playMusic(self.loader.music, looping=1, volume=0.8)
         self.fsm.request(requestStatus['how'], [requestStatus])
 
-    def startAprilFoolsControls(self):
-        if isinstance(base.localAvatar.controlManager.currentControls, GravityWalker):
-            base.localAvatar.controlManager.currentControls.setGravity(32.174 * 0.75)
-
-    def stopAprilFoolsControls(self):
-        if isinstance(base.localAvatar.controlManager.currentControls, GravityWalker):
-            base.localAvatar.controlManager.currentControls.setGravity(32.174 * 2.0)
-
     def exit(self):
         base.localAvatar.stopChat()
-        if hasattr(base.cr, 'newsManager') and base.cr.newsManager:
-            holidayIds = base.cr.newsManager.getHolidayIdList()
-            if ToontownGlobals.APRIL_FOOLS_COSTUMES in holidayIds or ToontownGlobals.SILLYMETER_EXT_HOLIDAY in holidayIds:
-                self.stopAprilFoolsControls()
         self._telemLimiter.destroy()
         del self._telemLimiter
         if hasattr(self, 'fsm'):
@@ -371,12 +344,6 @@ class Estate(Place.Place):
         if hasattr(self, 'walkStateData'):
             self.walkStateData.fsm.request('walking')
         self.toonSubmerged = 0
-        if hasattr(base.cr, 'newsManager') and base.cr.newsManager:
-            holidayIds = base.cr.newsManager.getHolidayIdList()
-            if ToontownGlobals.APRIL_FOOLS_COSTUMES in holidayIds or ToontownGlobals.SILLYMETER_EXT_HOLIDAY in holidayIds:
-                self.startAprilFoolsControls()
-            else:
-                self.stopAprilFoolsControls()
 
     def __setUnderwaterFog(self):
         if base.wantFog:

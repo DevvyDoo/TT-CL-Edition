@@ -62,13 +62,6 @@ class DistributedEstate(DistributedObject.DistributedObject):
 
     def load(self):
         self.lt = base.localAvatar
-        newsManager = base.cr.newsManager
-        if newsManager:
-            holidayIds = base.cr.newsManager.getDecorationHolidayId()
-            if ToontownGlobals.HALLOWEEN_COSTUMES in holidayIds or ToontownGlobals.SPOOKY_COSTUMES in holidayIds:
-                self.loadWitch()
-            else:
-                self.loadAirplane()
         self.loadFlowerSellBox()
         self.oldClear = base.win.getClearColor()
         base.win.setClearColor(Vec4(0.09, 0.55, 0.21, 1.0))

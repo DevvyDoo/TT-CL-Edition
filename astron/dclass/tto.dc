@@ -32,7 +32,6 @@ from direct.distributed import DistributedObjectGlobal
 from toontown.ai import WelcomeValleyManager/AI
 from toontown.building import DistributedAnimatedProp/AI
 from toontown.toon import DistributedToon/AI/UD
-from toontown.safezone import DistributedTrolley/AI
 from toontown.safezone import DistributedPartyGate/AI
 from toontown.suit import DistributedSuitPlanner/AI
 from toontown.suit import DistributedSuitBase/AI
@@ -85,7 +84,6 @@ from toontown.estate import DistributedHouseInterior/AI
 from toontown.estate import DistributedGarden/AI
 from toontown.shtiker import DeleteManager/AI
 from toontown.ai import ToontownMagicWordManager/AI
-from toontown.ai import NewsManager/AI
 from toontown.shtiker import PurchaseManager/AI
 from toontown.shtiker import NewbiePurchaseManager/AI
 from toontown.safezone import SafeZoneManager/AI
@@ -122,7 +120,6 @@ from toontown.toon import DistributedNPCToonBase/AI
 from toontown.toon import DistributedNPCToon/AI
 from toontown.toon import DistributedNPCSpecialQuestGiver/AI
 from toontown.toon import DistributedNPCFlippyInToonHall/AI
-from toontown.toon import DistributedNPCScientist/AI
 from toontown.toon import DistributedNPCClerk/AI
 from toontown.toon import DistributedNPCTailor/AI
 from toontown.toon import DistributedNPCBlocker/AI
@@ -1165,22 +1162,6 @@ dclass DistributedPartyGate : DistributedObject {
   setParty(publicPartyInfo);
 };
 
-dclass DistributedTrolley : DistributedObject {
-  setState(string, int16) broadcast ram;
-  fillSlot0(uint32) broadcast ram;
-  fillSlot1(uint32) broadcast ram;
-  fillSlot2(uint32) broadcast ram;
-  fillSlot3(uint32) broadcast ram;
-  emptySlot0(uint32, int16) broadcast ram;
-  emptySlot1(uint32, int16) broadcast ram;
-  emptySlot2(uint32, int16) broadcast ram;
-  emptySlot3(uint32, int16) broadcast ram;
-  requestBoard() airecv clsend;
-  rejectBoard(uint32);
-  requestExit() airecv clsend;
-  setMinigameZone(uint32, uint16);
-};
-
 dclass DistributedSuitPlanner : DistributedObject {
   setZoneId(uint32) required broadcast ram;
   suitListQuery() airecv clsend;
@@ -1574,7 +1555,6 @@ dclass DistributedTarget : DistributedObject {
 
 dclass DistributedMinigame : DistributedObject {
   setParticipants(uint32[]) broadcast ram required;
-  setTrolleyZone(uint32) broadcast ram required;
   setStartingVotes(uint16[]) broadcast ram required;
   setMetagameRound(int8) broadcast ram required;
   setDifficultyOverrides(int32, int32) broadcast ram required;
@@ -1957,63 +1937,6 @@ dclass DeleteManager : DistributedObject {
 
 dclass ToontownMagicWordManager : MagicWordManager {
   requestTeleport(string, string, uint32, uint32, uint32);
-};
-
-struct weeklyCalendarHoliday {
-  uint8 holidayId;
-  uint8 dayOfTheWeek;
-};
-
-struct yearlyCalendarHoliday {
-  uint8 holidayId;
-  uint8[] firstStartTime;
-  uint8[] lastEndTime;
-};
-
-struct oncelyCalendarHoliday {
-  uint8 holidayId;
-  uint16[] firstStartTime;
-  uint16[] lastEndTime;
-};
-
-struct relativelyCalendarHoliday {
-  uint8 holidayId;
-  uint16[] firstStartTime;
-  uint16[] lastEndTime;
-};
-
-struct startAndEndTime {
-  uint16[] startTime;
-  uint16[] endTime;
-};
-
-struct multipleStartHoliday {
-  uint8 holidayId;
-  startAndEndTime times[];
-};
-
-dclass NewsManager : DistributedObject {
-  setPopulation(uint32) broadcast ram;
-  setBingoWin(uint32) broadcast ram;
-  setBingoStart() broadcast;
-  setBingoEnd() broadcast;
-  setCircuitRaceStart() broadcast;
-  setCircuitRaceEnd() broadcast;
-  setTrolleyHolidayStart() broadcast;
-  setTrolleyHolidayEnd() broadcast;
-  setTrolleyWeekendStart() broadcast;
-  setTrolleyWeekendEnd() broadcast;
-  setRoamingTrialerWeekendStart() broadcast;
-  setRoamingTrialerWeekendEnd() broadcast;
-  setInvasionStatus(uint8, string, uint32, uint8) broadcast;
-  setHolidayIdList(uint32[]) broadcast ram;
-  holidayNotify() broadcast;
-  setWeeklyCalendarHolidays(weeklyCalendarHoliday []) required broadcast ram;
-  setYearlyCalendarHolidays(yearlyCalendarHoliday []) required broadcast ram;
-  setOncelyCalendarHolidays(oncelyCalendarHoliday []) required broadcast ram;
-  setRelativelyCalendarHolidays(relativelyCalendarHoliday []) required broadcast ram;
-  setMultipleStartHolidays(multipleStartHoliday []) required broadcast ram;
-  sendSystemMessage(string, uint8) broadcast ram;
 };
 
 dclass PurchaseManager : DistributedObject {
@@ -2401,10 +2324,6 @@ dclass DistributedNPCSpecialQuestGiver : DistributedNPCToonBase {
 };
 
 dclass DistributedNPCFlippyInToonHall : DistributedNPCToon {
-};
-
-dclass DistributedNPCScientist : DistributedNPCToonBase {
-  setChat(char [0-1024], uint8, uint32, uint8, uint8) ownsend broadcast;
 };
 
 dclass DistributedNPCClerk : DistributedNPCToonBase {

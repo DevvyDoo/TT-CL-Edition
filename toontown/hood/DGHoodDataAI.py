@@ -1,7 +1,6 @@
 from direct.directnotify import DirectNotifyGlobal
 import HoodDataAI
 from toontown.toonbase import ToontownGlobals
-from toontown.safezone import DistributedTrolleyAI
 from toontown.safezone import DGTreasurePlannerAI
 from toontown.safezone import DistributedDGFlowerAI
 from toontown.safezone import ButterflyGlobals
@@ -18,10 +17,6 @@ class DGHoodDataAI(HoodDataAI.HoodDataAI):
 
     def startup(self):
         HoodDataAI.HoodDataAI.startup(self)
-        trolley = DistributedTrolleyAI.DistributedTrolleyAI(self.air)
-        trolley.generateWithRequired(self.zoneId)
-        trolley.start()
-        self.addDistObj(trolley)
         self.treasurePlanner = DGTreasurePlannerAI.DGTreasurePlannerAI(self.zoneId)
         self.treasurePlanner.start()
         flower = DistributedDGFlowerAI.DistributedDGFlowerAI(self.air)

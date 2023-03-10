@@ -202,18 +202,9 @@ class InteractiveAnimatedProp(GenericAnimatedProp.GenericAnimatedProp, FSM.FSM):
         GenericAnimatedProp.GenericAnimatedProp.enter(self)
         if base.config.GetBool('props-buff-battles', True):
             self.notify.debug('props buff battles is true')
-            if base.cr.newsManager.isHolidayRunning(self.holidayId):
-                self.notify.debug('holiday is running, doing idle interval')
-                self.node.stop()
-                self.node.pose('idle0', 0)
-                if base.config.GetBool('interactive-prop-random-idles', 1):
-                    self.requestIdleOrSad()
-                else:
-                    self.idleInterval.loop()
-            else:
-                self.notify.debug('holiday is NOT running, doing nothing')
-                self.node.stop()
-                self.node.pose('idle0', 0)
+            self.notify.debug('holiday is NOT running, doing nothing')
+            self.node.stop()
+            self.node.pose('idle0', 0)
         else:
             self.notify.debug('props do not buff battles')
             self.node.stop()

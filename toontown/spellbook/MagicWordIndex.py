@@ -262,36 +262,6 @@ class activityLog(MagicWord):
 
         return 'modified log'
 
-
-class StartHoliday(MagicWord):
-    aliases = ["startH"]
-    desc = "Starts a specified holiday ID."
-    execLocation = MagicWordConfig.EXEC_LOC_SERVER
-    arguments = [("id", int, True)]
-
-    def handleWord(self, invoker, avId, toon, *args):
-        id = args[0]
-        try:
-            self.air.holidayManager.startHoliday(id)
-            return "Started holiday %d" % (id)
-        except:
-            return "Invalid holiday ID: %d" % (id)
-
-class EndHoliday(MagicWord):
-    aliases = ["endH"]
-    desc = "Ends a specified holiday ID."
-    execLocation = MagicWordConfig.EXEC_LOC_SERVER
-    arguments = [("id", int, True)]
-
-    def handleWord(self, invoker, avId, toon, *args):
-        id = args[0]
-        try:
-            self.air.holidayManager.endHoliday(id)
-            return "Ended holiday %d" % (id)
-        except:
-            return "Invalid holiday ID: %d" % (id)
-
-
 class ToggleOobe(MagicWord):
     aliases = ["oobe"]
     desc = "Toggles the out of body experience mode, which lets you move the camera freely."
@@ -479,16 +449,6 @@ class SetMaxBeans(MagicWord):
         return "{}'s jellybean jar size has been set to {}.".format(toon.getName(), maxBeans)
 
 ########################################################################################################################
-class SetEmblems(MagicWord):
-    aliases = ["emblems"]
-    desc = "Gives the target a specified amount of silver and gold emblems, respectively."
-    execLocation = MagicWordConfig.EXEC_LOC_SERVER
-    arguments = [("silver", int, True), ("gold", int, True)]
-
-    def handleWord(self, invoker, avId, toon, *args):
-        emblems = (args[0], args[1])
-        toon.addEmblems(emblems)
-        return "Gave {} {} silver and {} gold emblems!".format(toon.getName(), *emblems)
 
 class ToggleImmortal(MagicWord):
     aliases = ["immortal"]
@@ -968,8 +928,6 @@ class InvasionStatus(MagicWord):
             return "There is no invasion in progress!"
 
         invadingCog = invasionMgr.getInvadingCog()
-        simbase.air.newsManager.sendUpdateToAvatarId(invoker.getDoId(), 'setInvasionStatus', [
-            ToontownGlobals.SuitInvasionUpdate, invadingCog[0], invasionMgr.numSuits, invadingCog[1]])
 
 
 class RevealMap(MagicWord):
@@ -1072,9 +1030,7 @@ class SetCEIndex(MagicWord):
         zoneId = args[1]
         duration = args[2]
 
-        if not 0 <= index <= 17:
-            return "Invalid value %s specified for Cheesy Effect." % index
-        if index == 17 and (not hasattr(self.air, 'holidayManager') or not self.air.holidayManager.isHolidayRunning(ToontownGlobals.APRIL_FOOLS)):
+        if not 0 <= index <= 16:
             return "Invalid value %s specified for Cheesy Effect." % index
         if zoneId != 0 and not 100 < zoneId < ToontownGlobals.DynamicZonesBegin:
             return "Invalid zoneId specified."
@@ -1726,24 +1682,10 @@ class SkipCFO(MagicWord):
             return "You aren't in a CFO!"
 
         battle = battle.lower()
-
-        if battle == 'two':
-            if boss.state in ('PrepareBattleThree', 'BattleThree'):
-                return "You can not return to previous rounds!"
-            else:
-                boss.exitIntroduction()
-                boss.b_setState('PrepareBattleThree')
-                return "Skipping to last round..."
-
         if battle == 'next':
-            if boss.state in ('PrepareBattleOne', 'BattleOne'):
-                boss.exitIntroduction()
-                boss.b_setState('PrepareBattleThree')
-                return "Skipping current round..."
-            elif boss.state in ('PrepareBattleThree', 'BattleThree'):
-                boss.exitIntroduction()
-                boss.b_setState('Victory')
-                return "Skipping final round..."
+            boss.exitIntroduction()
+            boss.b_setState('Victory')
+            return "Skipping final round..."
 
 
 class HitCFO(MagicWord):
@@ -2126,8 +2068,7 @@ class aim(MagicWord):
         safes = args[0]
         if not (0 <= safes <= 8):
             return "Invalid # of safes, try a number between 0 and 8 :)"
-
-        if boss.state not in ('PrepareBattleThree', 'BattleThree'):
+        if boss.state not in ('BossRound'):
             return "Need to be in a crane round to use!"
 
         if boss.wantAimPractice:
@@ -2363,7 +2304,7 @@ class StunVP(MagicWord):
         if not boss:
             return "You aren't in a VP!"
         currState = boss.getCurrentOrNextState()
-        if currState != 'BattleThree':
+        if currState != 'BossRound':
             return "You aren't in the final round of a VP!"
         boss.b_setAttackCode(ToontownGlobals.BossCogDizzyNow)
         boss.b_setBossDamage(boss.getBossDamage(), 0, 0)
@@ -2932,34 +2873,6 @@ class SetSos(MagicWord):
         return "Restocked {0} {1} SOS cards successfully!".format(amt, npcName)
 
 
-class FreeBldg(MagicWord):
-    desc = "Closest cog building gets freed."
-    execLocation = MagicWordConfig.EXEC_LOC_SERVER
-
-    def handleWord(self, invoker, avId, toon, *args):
-
-        returnCode = invoker.doBuildingFree()
-        if returnCode[0] == 'success':
-            return "Successfully took back building!"
-        elif returnCode[0] == 'busy':
-            return "Toons are currently taking back the building!"
-        return "Couldn't free building."
-
-
-class MaxGarden(MagicWord):
-    desc = "Maxes your garden."
-    execLocation = MagicWordConfig.EXEC_LOC_SERVER
-
-    def handleWord(self, invoker, avId, toon, *args):
-        invoker.b_setShovel(3)
-        invoker.b_setWateringCan(3)
-        invoker.b_setShovelSkill(639)
-        invoker.b_setWateringCanSkill(999)
-        invoker.b_setGardenTrophies(GardenGlobals.TrophyDict.keys())
-        #invoker.b_setFlowerCollection([1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6, 7, 8, 9])
-        #print invoker.flowerCollection.getNetLists()
-
-
 class InstaDelivery(MagicWord):
     aliases = ["fastdel"]
     desc = "Instant delivery of an item."
@@ -3057,34 +2970,6 @@ class EndFlying(MagicWord):
             return "Completed the flying game."
 
         return "You are not in a flying game!"
-
-
-class Ping(MagicWord):
-    desc = "Pong!"
-    execLocation = MagicWordConfig.EXEC_LOC_SERVER
-
-    def handleWord(self, invoker, avId, toon, *args):
-        return "Pong!"
-
-
-class GardenGame(MagicWord):
-    aliases = ["gardendrop"]
-    desc = "Start the garden drop mini-game."
-    execLocation = MagicWordConfig.EXEC_LOC_CLIENT
-
-    def handleWord(self, invoker, avId, toon, *args):
-        from toontown.estate import GardenDropGame
-        base.localAvatar.game = GardenDropGame.GardenDropGame()
-
-
-class WinGame(MagicWord):
-    aliases = ["winminigame"]
-    desc = "Win the trolley game you are in."
-    execLocation = MagicWordConfig.EXEC_LOC_CLIENT
-
-    def handleWord(self, invoker, avId, toon, *args):
-        messenger.send("minigameVictory")
-        return "Trolley game won."
 
 
 class GetZone(MagicWord):

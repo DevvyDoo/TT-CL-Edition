@@ -1,7 +1,6 @@
 from direct.directnotify import DirectNotifyGlobal
 import HoodDataAI
 from toontown.toonbase import ToontownGlobals
-from toontown.safezone import DistributedTrolleyAI
 from toontown.safezone import BRTreasurePlannerAI
 from toontown.toon import DistributedNPCFishermanAI
 
@@ -17,9 +16,5 @@ class BRHoodDataAI(HoodDataAI.HoodDataAI):
 
     def startup(self):
         HoodDataAI.HoodDataAI.startup(self)
-        trolley = DistributedTrolleyAI.DistributedTrolleyAI(self.air)
-        trolley.generateWithRequired(self.zoneId)
-        trolley.start()
-        self.addDistObj(trolley)
         self.treasurePlanner = BRTreasurePlannerAI.BRTreasurePlannerAI(self.zoneId)
         self.treasurePlanner.start()

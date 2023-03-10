@@ -35,10 +35,6 @@ class DistributedLeaderBoard(DistributedObject.DistributedObject):
         self.board.reparentTo(render)
         self.accept('decorator-holiday-%d-ending' % ToontownGlobals.CRASHED_LEADERBOARD, self.showLists)
         self.accept('decorator-holiday-%d-starting' % ToontownGlobals.CRASHED_LEADERBOARD, self.hideLists)
-        newsManager = base.cr.newsManager
-        if newsManager:
-            if ToontownGlobals.CRASHED_LEADERBOARD in newsManager.holidayIdList:
-                self.hideLists()
 
     def showLists(self):
         self.board.show()

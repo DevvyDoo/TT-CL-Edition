@@ -26,8 +26,6 @@ def openToAll(zoneId, avatar):
      ToontownGlobals.GoofySpeedway,
      ToontownGlobals.Tutorial]
     specialZones = [ToontownGlobals.SellbotLobby]
-    if ToontownGlobals.SELLBOT_NERF_HOLIDAY in simbase.air.holidayManager.currentHolidays:
-        specialZones.append(ToontownGlobals.SellbotHQ)
     ownerId = simbase.air.estateMgr.getOwnerFromZone(zoneId)
     if ownerId:
         for zone in simbase.air.estateMgr.getEstateZones(ownerId):

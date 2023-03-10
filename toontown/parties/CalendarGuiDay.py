@@ -8,7 +8,6 @@ from toontown.toonbase import TTLocalizer
 from toontown.toonbase import ToontownGlobals
 from toontown.parties.PartyInfo import PartyInfo
 from toontown.parties import PartyGlobals
-from toontown.ai.NewsManager import NewsManager
 
 def myStrftime(myTime):
     result = ''
@@ -165,22 +164,6 @@ class CalendarGuiDay(DirectFrame):
         DirectFrame.destroy(self)
         return
 
-    def addWeeklyHolidays(self):
-        if not self.filter == ToontownGlobals.CalendarFilterShowAll and not self.filter == ToontownGlobals.CalendarFilterShowOnlyHolidays:
-            return
-        if base.cr.newsManager:
-            holidays = base.cr.newsManager.getHolidaysForWeekday(self.myDate.weekday())
-            holidayName = ''
-            holidayDesc = ''
-            for holidayId in holidays:
-                if holidayId in TTLocalizer.HolidayNamesInCalendar:
-                    holidayName = TTLocalizer.HolidayNamesInCalendar[holidayId][0]
-                    holidayDesc = TTLocalizer.HolidayNamesInCalendar[holidayId][1]
-                else:
-                    holidayName = TTLocalizer.UnknownHoliday % holidayId
-                self.addTitleAndDescToScrollList(holidayName, holidayDesc)
-
-            self.scrollList.refresh()
         if base.config.GetBool('calendar-test-items', 0):
             if self.myDate.date() + datetime.timedelta(days=-1) == base.cr.toontownTimeManager.getCurServerDateTime().date():
                 testItems = ('1:00 AM Party', '2:00 AM CEO', '11:15 AM Party', '5:30 PM CJ', '11:00 PM Party', 'Really Really Long String')
@@ -222,22 +205,6 @@ class CalendarGuiDay(DirectFrame):
                     self.hostedPartiesToday.append(party)
                     self.timedEvents.append((party.startTime.time(), party))
 
-        if base.cr.newsManager and (self.filter == ToontownGlobals.CalendarFilterShowAll or self.filter == ToontownGlobals.CalendarFilterShowOnlyHolidays):
-            yearlyHolidays = base.cr.newsManager.getYearlyHolidaysForDate(self.myDate)
-            for holiday in yearlyHolidays:
-                holidayId = holiday[1]
-                holidayStart = holiday[2]
-                holidayEnd = holiday[3]
-                holidayType = holiday[0]
-                if holidayStart[0] == self.myDate.month and holidayStart[1] == self.myDate.day:
-                    myTime = datetime.time(holidayStart[2], holidayStart[3])
-                elif holidayEnd[0] == self.myDate.month and holidayEnd[1] == self.myDate.day:
-                    myTime = datetime.time(holidayEnd[2], holidayEnd[3])
-                else:
-                    self.notify.error('holiday is not today %s' % holiday)
-                self.timedEvents.append((myTime, holiday))
-
-            oncelyHolidays = base.cr.newsManager.getOncelyHolidaysForDate(self.myDate)
             for holiday in oncelyHolidays:
                 holidayId = holiday[1]
                 holidayStart = holiday[2]
@@ -251,7 +218,6 @@ class CalendarGuiDay(DirectFrame):
                     self.notify.error('holiday is not today %s' % holiday)
                 self.timedEvents.append((myTime, holiday))
 
-            multipleStartHolidays = base.cr.newsManager.getMultipleStartHolidaysForDate(self.myDate)
             for holiday in multipleStartHolidays:
                 holidayId = holiday[1]
                 holidayStart = holiday[2]
@@ -265,7 +231,6 @@ class CalendarGuiDay(DirectFrame):
                     self.notify.error('holiday is not today %s' % holiday)
                 self.timedEvents.append((myTime, holiday))
 
-            relativelyHolidays = base.cr.newsManager.getRelativelyHolidaysForDate(self.myDate)
             for holiday in relativelyHolidays:
                 holidayId = holiday[1]
                 holidayStart = holiday[2]
@@ -288,17 +253,6 @@ class CalendarGuiDay(DirectFrame):
                 return 1
 
         self.timedEvents.sort(cmp=timedEventCompare)
-        for timedEvent in self.timedEvents:
-            if isinstance(timedEvent[1], PartyInfo):
-                self.addPartyToScrollList(timedEvent[1])
-            elif isinstance(timedEvent[1], tuple) and timedEvent[1][0] == NewsManager.YearlyHolidayType:
-                self.addYearlyHolidayToScrollList(timedEvent[1])
-            elif isinstance(timedEvent[1], tuple) and timedEvent[1][0] == NewsManager.OncelyHolidayType:
-                self.addOncelyHolidayToScrollList(timedEvent[1])
-            elif isinstance(timedEvent[1], tuple) and timedEvent[1][0] == NewsManager.OncelyMultipleStartHolidayType:
-                self.addOncelyMultipleStartHolidayToScrollList(timedEvent[1])
-            elif isinstance(timedEvent[1], tuple) and timedEvent[1][0] == NewsManager.RelativelyHolidayType:
-                self.addRelativelyHolidayToScrollList(timedEvent[1])
 
     def addYearlyHolidayToScrollList(self, holiday):
         holidayId = holiday[1]

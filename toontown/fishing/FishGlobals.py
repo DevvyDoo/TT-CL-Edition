@@ -30,7 +30,6 @@ Rod2JellybeanDict = {0: 10,
  3: 75,
  4: 150}
 HealAmount = 1
-JellybeanFishingHolidayScoreMultiplier = 2
 MAX_RARITY = 10
 GlobalRarityDialBase = 4.3
 FishingAngleMax = 50.0
@@ -702,13 +701,6 @@ def getValue(genus, species, weight):
     value = OVERALL_VALUE_SCALE * (rarityValue + weightValue)
     finalValue = int(ceil(value))
     base = getBase()
-    if hasattr(base, 'cr') and base.cr:
-        if hasattr(base.cr, 'newsManager') and base.cr.newsManager:
-            holidayIds = base.cr.newsManager.getHolidayIdList()
-            if ToontownGlobals.JELLYBEAN_FISHING_HOLIDAY in holidayIds or ToontownGlobals.JELLYBEAN_FISHING_HOLIDAY_MONTH in holidayIds:
-                finalValue *= JellybeanFishingHolidayScoreMultiplier
-    elif ToontownGlobals.JELLYBEAN_FISHING_HOLIDAY in simbase.air.holidayManager.currentHolidays or ToontownGlobals.JELLYBEAN_FISHING_HOLIDAY_MONTH in simbase.air.holidayManager.currentHolidays:
-        finalValue *= JellybeanFishingHolidayScoreMultiplier
     return finalValue
 
 

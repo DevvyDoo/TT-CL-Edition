@@ -79,26 +79,10 @@ class Hood(StateData.StateData):
     def load(self):
         if self.storageDNAFile:
             loader.loadDNAFile(self.dnaStore, self.storageDNAFile)
-        newsManager = base.cr.newsManager
-        if newsManager:
-            holidayIds = base.cr.newsManager.getDecorationHolidayId()
-            for holiday in holidayIds:
-                for storageFile in self.holidayStorageDNADict.get(holiday, []):
-                    loader.loadDNAFile(self.dnaStore, storageFile)
-
-            if ToontownGlobals.HALLOWEEN_COSTUMES not in holidayIds and ToontownGlobals.SPOOKY_COSTUMES not in holidayIds or not self.spookySkyFile:
-                self.sky = loader.loadModel(self.skyFile)
-                self.sky.setTag('sky', 'Regular')
-                self.sky.setScale(1.0)
-                self.sky.setFogOff()
-            else:
-                self.sky = loader.loadModel(self.spookySkyFile)
-                self.sky.setTag('sky', 'Halloween')
-        if not newsManager:
-            self.sky = loader.loadModel(self.skyFile)
-            self.sky.setTag('sky', 'Regular')
-            self.sky.setScale(1.0)
-            self.sky.setFogOff()
+        self.sky = loader.loadModel(self.skyFile)
+        self.sky.setTag('sky', 'Regular')
+        self.sky.setScale(1.0)
+        self.sky.setFogOff()
 
     def unload(self):
         if hasattr(self, 'loader'):
@@ -110,8 +94,6 @@ class Hood(StateData.StateData):
         del self.parentFSM
         self.dnaStore.resetHood()
         del self.dnaStore
-        self.sky.removeNode()
-        del self.sky
         self.ignoreAll()
         ModelPool.garbageCollect()
         TexturePool.garbageCollect()
@@ -225,29 +207,3 @@ class Hood(StateData.StateData):
     def stopSky(self):
         taskMgr.remove('skyTrack')
         self.sky.reparentTo(hidden)
-
-    def startSpookySky(self):
-        if not self.spookySkyFile:
-            return
-        if hasattr(self, 'sky') and self.sky:
-            self.stopSky()
-        self.sky = loader.loadModel(self.spookySkyFile)
-        self.sky.setTag('sky', 'Halloween')
-        self.sky.setColor(0.5, 0.5, 0.5, 1)
-        self.sky.reparentTo(camera)
-        self.sky.setTransparency(TransparencyAttrib.MDual, 1)
-        fadeIn = self.sky.colorScaleInterval(1.5, Vec4(1, 1, 1, 1), startColorScale=Vec4(1, 1, 1, 0.25), blendType='easeInOut')
-        fadeIn.start()
-        self.sky.setZ(0.0)
-        self.sky.setHpr(0.0, 0.0, 0.0)
-        ce = CompassEffect.make(NodePath(), CompassEffect.PRot | CompassEffect.PZ)
-        self.sky.node().setEffect(ce)
-
-    def endSpookySky(self):
-        if hasattr(self, 'sky') and self.sky:
-            self.sky.reparentTo(hidden)
-        if hasattr(self, 'sky'):
-            self.sky = loader.loadModel(self.skyFile)
-            self.sky.setTag('sky', 'Regular')
-            self.sky.setScale(1.0)
-            self.startSky()

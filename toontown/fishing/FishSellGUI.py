@@ -44,10 +44,6 @@ class FishSellGUI(DirectFrame):
 
     def __updateFishValue(self):
         doubledJellybean = ''
-        if base.cr.newsManager.isHolidayRunning(ToontownGlobals.JELLYBEAN_FISHING_HOLIDAY) or base.cr.newsManager.isHolidayRunning(ToontownGlobals.JELLYBEAN_FISHING_HOLIDAY_MONTH):
-            doubledJellybean = TTLocalizer.PartyRewardDoubledJellybean
-            self.rewardDoubledJellybeanLabel['text'] = doubledJellybean
-            self.rewardDoubledJellybeanLabel.setText()
         fishTank = base.localAvatar.getFishTank()
         num = len(fishTank)
         value = fishTank.getTotalValue()

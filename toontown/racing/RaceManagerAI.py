@@ -725,10 +725,8 @@ class CircuitRaceHolidayMgr(HolidayBaseAI.HolidayBaseAI):
 
     def start(self):
         bboard.post(CircuitRaceHolidayMgr.PostName, True)
-        simbase.air.newsManager.circuitRaceStart()
         messenger.send(CircuitRaceHolidayMgr.StartStopMsg)
 
     def stop(self):
         bboard.remove(CircuitRaceHolidayMgr.PostName)
-        simbase.air.newsManager.circuitRaceEnd()
         messenger.send(CircuitRaceHolidayMgr.StartStopMsg)

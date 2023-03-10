@@ -82,7 +82,6 @@ class AIBase:
         self.wantKarts = self.config.GetBool('wantKarts', 1)
         self.newDBRequestGen = self.config.GetBool('new-database-request-generate', 1)
         self.waitShardDelete = self.config.GetBool('wait-shard-delete', 1)
-        self.blinkTrolley = self.config.GetBool('blink-trolley', 0)
         self.fakeDistrictPopulations = self.config.GetBool('fake-district-populations', 0)
         self.wantSwitchboard = self.config.GetBool('want-switchboard', 0)
         self.wantSwitchboardHacks = self.config.GetBool('want-switchboard-hacks', 0)

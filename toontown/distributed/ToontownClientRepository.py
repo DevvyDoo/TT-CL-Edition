@@ -85,7 +85,6 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         self.bankManager = None
         self.catalogManager = None
         self.welcomeValleyManager = None
-        self.newsManager = None
         self.streetSign = None
         self.distributedDistrict = None
         self.partyManager = None
@@ -556,7 +555,7 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
             else:
                 self.notify.info('dumpAllSubShardObjects: defaultShard is %s' % localAvatar.defaultShard)
 
-            ignoredClasses = ('MagicWordManager', 'TimeManager', 'DistributedDistrict', 'FriendManager', 'NewsManager', 'ToontownMagicWordManager', 'WelcomeValleyManager', 'DistributedTrophyMgr', 'CatalogManager', 'DistributedBankMgr', 'EstateManager', 'RaceManager', 'SafeZoneManager', 'DeleteManager', 'TutorialManager', 'ToontownDistrict', 'DistributedDeliveryManager', 'DistributedPartyManager', 'AvatarFriendsManager', 'InGameNewsMgr', 'WhitelistMgr', 'TTCodeRedemptionMgr')
+            ignoredClasses = ('MagicWordManager', 'TimeManager', 'DistributedDistrict', 'FriendManager', 'ToontownMagicWordManager', 'WelcomeValleyManager', 'DistributedTrophyMgr', 'CatalogManager', 'DistributedBankMgr', 'EstateManager', 'RaceManager', 'SafeZoneManager', 'DeleteManager', 'TutorialManager', 'ToontownDistrict', 'DistributedDeliveryManager', 'DistributedPartyManager', 'AvatarFriendsManager', 'InGameNewsMgr', 'WhitelistMgr', 'TTCodeRedemptionMgr')
         messenger.send('clientCleanup')
         for avId, pad in self.__queryAvatarMap.items():
             pad.delayDelete.destroy()

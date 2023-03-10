@@ -23,9 +23,6 @@ class DistributedSellbotHQDoorAI(DistributedCogHQDoorAI.DistributedCogHQDoorAI):
             self.sendUpdateToAvatarId(avatarID, 'setOtherZoneIdAndDoId', [
                 self.destinationZone,
                 self.otherDoor.getDoId()])
-            if ToontownGlobals.SELLBOT_NERF_HOLIDAY in self.air.holidayManager.currentHolidays:
-                self.sendUpdateToAvatarId(avatarID, 'informPlayer', [
-                    suitType])
 
     def __getAccessLevel(self, avatarID):
         av = self.air.doId2do.get(avatarID)
@@ -43,8 +40,6 @@ class DistributedSellbotHQDoorAI(DistributedCogHQDoorAI.DistributedCogHQDoorAI):
                     allowed = 1
                 else:
                     suitType = CogDisguiseGlobals.suitTypes.NoSuit
-                if ToontownGlobals.SELLBOT_NERF_HOLIDAY in self.air.holidayManager.currentHolidays:
-                    allowed = 1
 
             else:
                 allowed = 1

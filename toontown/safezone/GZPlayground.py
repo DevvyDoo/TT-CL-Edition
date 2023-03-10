@@ -88,21 +88,6 @@ class GZPlayground(Playground.Playground):
             self.fsm.request('walk', [1])
         return
 
-    def enterGolfKartBlock(self, golfKart):
-        base.localAvatar.laffMeter.start()
-        base.localAvatar.b_setAnimState('off', 1)
-        self.accept(self.golfKartDoneEvent, self.handleGolfKartDone)
-        self.trolley = GolfKart.GolfKart(self, self.fsm, self.golfKartDoneEvent, golfKart.getDoId())
-        self.trolley.load()
-        self.trolley.enter()
-
-    def exitGolfKartBlock(self):
-        base.localAvatar.laffMeter.stop()
-        self.ignore(self.trolleyDoneEvent)
-        self.trolley.unload()
-        self.trolley.exit()
-        del self.trolley
-
     def detectedGolfKartCollision(self, golfKart):
         self.notify.debug('detectedGolfkartCollision()')
         self.fsm.request('golfKartBlock', [golfKart])

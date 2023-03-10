@@ -307,8 +307,6 @@ class DistributedMinigameAI(DistributedObjectAI.DistributedObjectAI):
                 score = int(self.scoreDict[avId] + 0.5)
             else:
                 score = randReward
-            if ToontownGlobals.JELLYBEAN_TROLLEY_HOLIDAY in simbase.air.holidayManager.currentHolidays or ToontownGlobals.JELLYBEAN_TROLLEY_HOLIDAY_MONTH in simbase.air.holidayManager.currentHolidays:
-                score *= MinigameGlobals.JellybeanTrolleyHolidayScoreMultiplier
             logEvent = False
             if score > 255:
                 score = 255
@@ -370,8 +368,6 @@ class DistributedMinigameAI(DistributedObjectAI.DistributedObjectAI):
                 pm.generateWithRequired(self.zoneId)
         else:
             self.notify.debug('last minigame, handling newbies')
-            if ToontownGlobals.JELLYBEAN_TROLLEY_HOLIDAY in simbase.air.holidayManager.currentHolidays or ToontownGlobals.JELLYBEAN_TROLLEY_HOLIDAY_MONTH in simbase.air.holidayManager.currentHolidays:
-                votesArray = map(lambda x: MinigameGlobals.JellybeanTrolleyHolidayScoreMultiplier * x, votesArray)
             for id in self.newbieIdList:
                 pm = NewbiePurchaseManagerAI.NewbiePurchaseManagerAI(self.air, id, self.avIdList, scoreList, self.minigameId, self.trolleyZone)
                 MinigameCreatorAI.acquireMinigameZone(self.zoneId)

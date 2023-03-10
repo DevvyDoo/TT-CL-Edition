@@ -18,6 +18,4 @@ class DistributedVPElevatorAI(DistributedBossElevatorAI.DistributedBossElevatorA
             boardingResult = REJECT_MINLAFF
         if not av.readyForPromotion(dept):
             boardingResult = REJECT_PROMOTION
-        if ToontownGlobals.SELLBOT_NERF_HOLIDAY in self.air.holidayManager.currentHolidays:
-            boardingResult = 0
         return boardingResult

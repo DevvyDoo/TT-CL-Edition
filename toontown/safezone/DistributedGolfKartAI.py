@@ -9,7 +9,6 @@ from direct.task import Task
 from direct.directnotify import DirectNotifyGlobal
 from toontown.minigame import MinigameCreatorAI
 from toontown.quest import Quests
-from toontown.minigame import TrolleyHolidayMgrAI
 from toontown.golf import GolfManagerAI
 from toontown.golf import GolfGlobals
 import random

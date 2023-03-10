@@ -59,7 +59,6 @@ NPC_KARTCLERK = 7
 NPC_PARTYPERSON = 8
 NPC_SPECIALQUESTGIVER = 9
 NPC_FLIPPYTOONHALL = 10
-NPC_SCIENTIST = 11
 CLERK_COUNTDOWN_TIME = 120
 TAILOR_COUNTDOWN_TIME = 300
 RTDNAFile = '/RTDNAFile.txt'
@@ -82,7 +81,6 @@ def createNPC(air, npcId, desc, zoneId, posIndex = 0, questCallback = None):
     import DistributedNPCPartyPersonAI
     import DistributedNPCSpecialQuestGiverAI
     import DistributedNPCFlippyInToonHallAI
-    import DistributedNPCScientistAI
     canonicalZoneId, name, dnaType, gender, protected, type = desc
     if type == NPC_REGULAR:
         npc = DistributedNPCToonAI.DistributedNPCToonAI(air, npcId, questCallback=questCallback)
@@ -106,8 +104,6 @@ def createNPC(air, npcId, desc, zoneId, posIndex = 0, questCallback = None):
         npc = DistributedNPCSpecialQuestGiverAI.DistributedNPCSpecialQuestGiverAI(air, npcId)
     elif type == NPC_FLIPPYTOONHALL:
         npc = DistributedNPCFlippyInToonHallAI.DistributedNPCFlippyInToonHallAI(air, npcId)
-    elif type == NPC_SCIENTIST:
-        npc = DistributedNPCScientistAI.DistributedNPCScientistAI(air, npcId)
     else:
         print 'createNPC() error!!!'
     npc.setName(name)
@@ -576,63 +572,6 @@ NPCToonDict = {20000: (-1,
         'f',
         1,
         NPC_PARTYPERSON),
- 2018: (2513,
-        lnames[2019],
-        ('fll',
-         'ss',
-         's',
-         'm',
-         15,
-         0,
-         15,
-         15,
-         99,
-         27,
-         86,
-         27,
-         39,
-         27),
-        'm',
-        1,
-        NPC_SCIENTIST),
- 2019: (2513,
-        lnames[2018],
-        ('pls',
-         'ls',
-         'l',
-         'm',
-         9,
-         0,
-         9,
-         9,
-         98,
-         27,
-         86,
-         27,
-         38,
-         27),
-        'm',
-        1,
-        NPC_SCIENTIST),
- 2020: (2513,
-        lnames[2020],
-        ('hss',
-         'ms',
-         'm',
-         'm',
-         20,
-         0,
-         20,
-         20,
-         97,
-         27,
-         86,
-         27,
-         37,
-         27),
-        'm',
-        1,
-        NPC_SCIENTIST),
  2101: (2601,
         lnames[2101],
         ('rll',

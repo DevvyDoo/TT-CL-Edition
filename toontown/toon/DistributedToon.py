@@ -298,16 +298,6 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
         Toon.Toon.setDNAString(self, dnaString)
 
     def setDNA(self, dna):
-        if base.cr.newsManager:
-            if base.cr.newsManager.isHolidayRunning(ToontownGlobals.SPOOKY_BLACK_CAT):
-                black = 26
-                heads = ['cls',
-                 'css',
-                 'csl',
-                 'cll']
-                dna.setTemporary(random.choice(heads), black, black, black)
-            else:
-                dna.restoreTemporary(self.style)
         oldHat = self.getHat()
         oldGlasses = self.getGlasses()
         oldBackpack = self.getBackpack()

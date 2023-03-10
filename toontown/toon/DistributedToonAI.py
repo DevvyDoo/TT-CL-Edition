@@ -820,7 +820,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
 
     def b_setMuzzle(self, muzzle):
         self.setMuzzle = muzzle
-     
+
     def b_setEyes(self, eyes):
         self.setEyes = type
 
@@ -1736,9 +1736,6 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         self.sendUpdate('setCheesyEffect', [effect, hoodId, expireTime])
 
     def setCheesyEffect(self, effect, hoodId, expireTime):
-        if simbase.air.holidayManager and ToontownGlobals.WINTER_CAROLING not in simbase.air.holidayManager.currentHolidays and ToontownGlobals.WACKY_WINTER_CAROLING not in simbase.air.holidayManager.currentHolidays and effect == ToontownGlobals.CESnowMan:
-            self.b_setCheesyEffect(ToontownGlobals.CENormal, hoodId, expireTime)
-            return
         self.savedCheesyEffect = effect
         self.savedCheesyHoodId = hoodId
         self.savedCheesyExpireTime = expireTime

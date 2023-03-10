@@ -74,12 +74,6 @@ class DistributedRacePadAI(DistributedKartPadAI, FSM):
     def changeTrack(self, task):
         trackInfo = RaceGlobals.getNextRaceInfo(self.trackInfo[0], self.genre, self.index)
         trackId, raceType = trackInfo[0], trackInfo[1]
-        if raceType == RaceGlobals.ToonBattle:
-            if ToontownGlobals.CIRCUIT_RACING in self.air.holidayManager.currentHolidays or \
-                    ToontownGlobals.CIRCUIT_RACING_EVENT in self.air.holidayManager.currentHolidays or \
-                    ToontownGlobals.SILLY_SATURDAY_CIRCUIT in self.air.holidayManager.currentHolidays:
-                raceType = RaceGlobals.Circuit
-
         self.setTrackInfo([trackId, raceType])
         self.laps = trackInfo[2]
         self.sendUpdate('setTrackInfo', [self.trackInfo])

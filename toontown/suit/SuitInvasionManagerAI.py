@@ -36,8 +36,6 @@ class SuitInvasionManagerAI:
         if not self.getInvading():
             return
 
-        self.air.newsManager.d_setInvasionStatus(ToontownGlobals.SuitInvasionEnd, self.invadingCog[0], self.numSuits,
-                                                 self.invadingCog[1])
         if task:
             task.remove()
         else:
@@ -56,8 +54,6 @@ class SuitInvasionManagerAI:
         self.numSuits = numCogs
         self.setInvadingCog(cogType, skeleton)
         self.invading = True
-        self.air.newsManager.d_setInvasionStatus(ToontownGlobals.SuitInvasionBegin, self.invadingCog[0], self.numSuits,
-                                                 self.invadingCog[1])
         self._spGetOut()
         timePerSuit = config.GetFloat('invasion-time-per-suit', 1.2)
         taskMgr.doMethodLater(self.numSuits * timePerSuit, self.stopInvasion, 'invasion-timeout')

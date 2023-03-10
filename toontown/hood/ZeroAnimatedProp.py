@@ -139,18 +139,7 @@ class ZeroAnimatedProp(GenericAnimatedProp.GenericAnimatedProp, FSM.FSM):
     def getPhaseToRun(self):
         result = -1
         enoughInfoToRun = False
-        if base.cr.newsManager.isHolidayRunning(self.holidayId):
-            zeroMgrString = '%sZeroMgr' % self.propString
-            if hasattr(base.cr, zeroMgrString):
-                zeroMgr = eval('base.cr.%s' % zeroMgrString)
-                if not zeroMgr.isDisabled():
-                    enoughInfoToRun = True
-                else:
-                    self.notify.debug('isDisabled = %s' % zeroMgr.isDisabled())
-            else:
-                self.notify.debug('base.cr does not have %s' % zeroMgrString)
-        else:
-            self.notify.debug('holiday is not running')
+        self.notify.debug('holiday is not running')
         self.notify.debug('enoughInfoToRun = %s' % enoughInfoToRun)
         if enoughInfoToRun and zeroMgr.getIsRunning():
             curPhase = zeroMgr.getCurPhase()

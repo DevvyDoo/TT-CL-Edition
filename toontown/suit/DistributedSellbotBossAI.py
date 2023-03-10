@@ -23,17 +23,10 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         DistributedBossCogAI.DistributedBossCogAI.__init__(self, air, 's')
         FSM.FSM.__init__(self, 'DistributedSellbotBossAI')
         self.doobers = []
-        self.nerfed = ToontownGlobals.SELLBOT_NERF_HOLIDAY in self.air.holidayManager.currentHolidays
-        if self.nerfed:
-            self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamageNerfed
-            self.pieHitToonup = SellbotBossGlobals.PieToonupNerfed
-            self.pieDamageMult = SellbotBossGlobals.PieDamageMultNerfed
-            self.hitCountDamage = SellbotBossGlobals.HitCountDamageNerfed
-        else:
-            self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamage
-            self.pieHitToonup = SellbotBossGlobals.PieToonup
-            self.pieDamageMult = SellbotBossGlobals.PieDamageMult
-            self.hitCountDamage = SellbotBossGlobals.HitCountDamage
+        self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamage
+        self.pieHitToonup = SellbotBossGlobals.PieToonup
+        self.pieDamageMult = SellbotBossGlobals.PieDamageMult
+        self.hitCountDamage = SellbotBossGlobals.HitCountDamage
         self.recoverRate = 0
         self.recoverStartTime = 0
 
@@ -101,10 +94,7 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             self.healToon(toon, self.pieHitToonup)
 
     def getDamageMultiplier(self):
-        if self.nerfed:
-            return SellbotBossGlobals.AttackMultNerfed
-        else:
-            return SellbotBossGlobals.AttackMult
+        return SellbotBossGlobals.AttackMult
 
     def touchCage(self):
         avId = self.air.getAvatarIdFromSender()
@@ -233,8 +223,6 @@ class DistributedSellbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
     def enterElevator(self):
         DistributedBossCogAI.DistributedBossCogAI.enterElevator(self)
         self.b_setBossDamage(0, 0, 0)
-        if self.nerfed:
-            self.createEasyModeBarrels()
 
     def enterIntroduction(self):
         DistributedBossCogAI.DistributedBossCogAI.enterIntroduction(self)
