@@ -165,8 +165,10 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             if not hasattr(base.cr, 'lastLoggedIn'):
                 base.cr.lastLoggedIn = self.cr.toontownTimeManager.convertStrToToontownTime('')
             self.setLastTimeReadNews(base.cr.lastLoggedIn)
-            self.acceptingNewFriends = base.settings.getBool('game', 'accepting-new-friends', True) and base.config.GetBool('accepting-new-friends-default', True)
-            self.acceptingNonFriendWhispers = base.settings.getBool('game', 'accepting-non-friend-whispers', True) and base.config.GetBool('accepting-non-friend-whispers-default', True)
+            self.acceptingNewFriends = (base.settings.get('accepting-new-friends') and
+                                        base.config.GetBool('accepting-new-friends-default', True))
+            self.acceptingNonFriendWhispers = (base.settings.get('accepting-non-friend-whispers') and
+                                               base.config.GetBool('accepting-non-friend-whispers-default', True))
             self.physControls.event.addAgainPattern('again%in')
             self.oldPos = None
             self.questMap = None
@@ -175,6 +177,8 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             self.camStart = [0, 0, 0, 0, 0, 0]
             self.camPoints = []
             self.camera = camera
+
+            self.accept("disableControls", self.disableControls)
 
     def wantLegacyLifter(self):
         return True
@@ -390,10 +394,11 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             guiButton = loader.loadModel('phase_3/models/gui/quit_button')
             self.purchaseButton = DirectButton(parent=aspect2d, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')), image_scale=0.9, text=TTLocalizer.OptionsPagePurchase, text_scale=0.05, text_pos=(0, -0.01), textMayChange=0, pos=(0.885, 0, -0.94), sortOrder=100, command=self.__handlePurchase)
             base.setCellsAvailable([base.bottomCells[4]], 0)
-        self.accept(base.SECONDARY_ACTION, self.__beginZeroPowerToss)
-        self.accept(base.SECONDARY_ACTION + '-up', self.__endZeroPowerToss)
-        self.accept('time-' + base.ACTION_BUTTON, self.__beginTossPie)
-        self.accept('time-' + base.ACTION_BUTTON + '-up', self.__endTossPie)
+
+        controls = base.controls
+        self.accept(controls.SECONDARY_ACTION, self.__zeroPowerToss)
+        self.accept('time-' + controls.ACTION_BUTTON, self.__beginTossPie)
+        self.accept('time-' + controls.ACTION_BUTTON + '-up', self.__endTossPie)
         self.accept('pieHit', self.__pieHit)
         self.accept('interrupt-pie', self.interruptPie)
         self.accept('InputState-jump', self.__toonMoved)
@@ -2001,3 +2006,27 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             return
 
         super().startSleepWatch(callback)
+
+    def enableCraneControls(self) -> None:
+        self.controlManager.enableCraneControls()
+
+    def disableCraneControls(self) -> None:
+        self.controlManager.disableCraneControls()
+
+    def enableControls(self) -> None:
+        if not self.avatarControlsEnabled:
+            return
+
+        self.ignore("enableControls")
+        self.accept("disableControls", self.disableControls)
+
+        self.controlManager.enableControls()
+        self.controlManager.enable()
+        self.listenForSprint()
+
+    def disableControls(self) -> None:
+        self.ignore("disableControls")
+        self.accept("enableControls", self.enableControls)
+
+        self.controlManager.disableControls()
+        self.ignoreSprint()
