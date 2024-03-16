@@ -416,7 +416,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
         # Flag the collisions in the end vault so safes and magnets
         # don't try to go through the wall.
-        self.disableBackWall()        
+        self.enableBackWall()        
 
         # Get the rolling doors.
 
