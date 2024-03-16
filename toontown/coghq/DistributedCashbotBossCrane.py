@@ -423,7 +423,8 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         cn = CollisionNode('sniffer')
         self.sniffer = magnetModel.attachNewNode(cn)
         self.sniffer.stash()
-        cs = CollisionCapsule(0, 0, -10, 0, 0, -13, 6)
+        cs = CollisionSphere(0, 0, -10, 6) # TTR Collisions
+        #cs = CollisionCapsule(0, 0, -10, 0, 0, -13, 6) # TTCC Collisions
         cs.setTangible(0)
         cn.addSolid(cs)
         cn.setIntoCollideMask(BitMask32(0))
@@ -845,8 +846,8 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             return
   
         # Spawn protection
-        if obj.state in ['EmergeA', 'EmergeB']:
-            return
+        #if obj.state in ['EmergeA', 'EmergeB']:
+            #return
         
         if obj and obj.state != 'LocalDropped' and (obj.state != 'Dropped' or obj.craneId != self.doId):
             self.boss.craneStatesDebug(doId=self.doId, content='Sniffed something, held obj %s' % (
