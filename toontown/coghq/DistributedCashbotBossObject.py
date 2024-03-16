@@ -192,17 +192,18 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
     def __hitBoss(self, entry):
         if (self.state == 'Dropped' or self.state == 'LocalDropped') and self.craneId != self.boss.doId:
             
-            #get the velocity of the object, relative to the crane
-            speed = max(self.speeds)
-            impact = min(1.0, max(pow(speed, 1.75)/466.475, 0.0))
-            
+            vel = self.physicsObject.getVelocity()
+            vel = self.crane.root.getRelativeVector(render, vel)
+            vel.normalize()
+            impact = vel[1]
+            print(vel)
             if impact >= self.getMinImpact():
+                print 'hit! %s' % impact
                 self.hitBossSoundInterval.start()
+                self.doHitBoss(impact)
             else:
                 self.touchedBossSoundInterval.start()
-
-            self.doHitBoss(impact, self.craneId)
-            self.resetSpeedCaching()
+                print '--not hard enough: %s' % impact
 
     def doHitBoss(self, impact, craneId):
         # Derived classes can override this to do something specific
