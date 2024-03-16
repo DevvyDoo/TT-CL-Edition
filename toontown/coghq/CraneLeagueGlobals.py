@@ -117,9 +117,9 @@ class CFORuleset:
         self.CFO_STUN_THRESHOLD = 24  # How much damage should a goon do to stun?
         self.SIDECRANE_IMPACT_STUN_THRESHOLD = 0.8  # How much impact should a side crane hit need to register a stun
 
-        self.WANT_BACKWALL = False
-        self.WANT_SIDECRANES = True
-        self.WANT_HEAVY_CRANES = True
+        self.WANT_BACKWALL = True
+        self.WANT_SIDECRANES = False
+        self.WANT_HEAVY_CRANES = False
 
         self.HEAVY_CRANE_DAMAGE_MULTIPLIER = 1.25
 
