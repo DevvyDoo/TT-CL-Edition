@@ -9872,7 +9872,6 @@ OptionNames = {
     "QUEST_HOTKEY": "ToonTask Hotkey",
     "CRANE_GRAB_KEY": "Crane Grab Key",
     "ACTION_BUTTON": "Action Button",
-    "SECONDARY_ACTION": "Secondary Action Button",
     "CHAT_HOTKEY": "Chat Button",
 
     # Video

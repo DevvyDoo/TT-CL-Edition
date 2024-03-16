@@ -25,7 +25,6 @@ class ControlSettings:
     QUEST_HOTKEY: str = "end"
     CRANE_GRAB_KEY: str = "control"
     ACTION_BUTTON: str = "delete"
-    SECONDARY_ACTION: str = "insert"
     CHAT_HOTKEY: str = "t"
 
 

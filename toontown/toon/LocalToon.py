@@ -396,7 +396,6 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             base.setCellsAvailable([base.bottomCells[4]], 0)
 
         controls = base.controls
-        self.accept(controls.SECONDARY_ACTION, self.__zeroPowerToss)
         self.accept('time-' + controls.ACTION_BUTTON, self.__beginTossPie)
         self.accept('time-' + controls.ACTION_BUTTON + '-up', self.__endTossPie)
         self.accept('pieHit', self.__pieHit)
