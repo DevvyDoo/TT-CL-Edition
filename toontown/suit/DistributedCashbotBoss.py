@@ -820,7 +820,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                         toonWantedPosition = self.customSpawnPositions[toonId]
                     except:
                         toonWantedPosition = random.randrange(0, 7)
-                    posHpr = ToontownGlobals.CashbotToonsBattleThreeStartPosHpr[toonWantedPosition]
+                    posHpr = CraneLeagueGlobals.TOON_SPAWN_POSITIONS[toonWantedPosition]
                     pos = Point3(*posHpr[0:3])
                     hpr = VBase3(*posHpr[3:6])
                     track.append(toon.posHprInterval(0.2, pos, hpr))
