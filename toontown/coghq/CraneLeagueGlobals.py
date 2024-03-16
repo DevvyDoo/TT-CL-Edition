@@ -152,9 +152,12 @@ class CFORuleset:
         self.CFO_ATTACKS_MULTIPLIER_INTERPOLATE = True
 
         # GOON/TREASURE SETTINGS
+        self.MIN_GOON_SCALE = 0.5 # What is the smallest size a goon could be? (beginning of CFO)
+        self.MAX_GOON_SCALE = 1.5 # What is the lrargest size a goon could be? (end of CFO)
         self.MIN_GOON_DAMAGE = 5  # What is the lowest amount of damage a goon should do? (beginning of CFO)
-        self.MAX_GOON_DAMAGE = 35  # What is the highest amount of damage a goon should do? (end of CFO)
+        self.MAX_GOON_DAMAGE = 25  # What is the highest amount of damage a goon should do? (end of CFO)
         self.GOON_SPEED_MULTIPLIER = 1.0  # How fast should goons move?
+        # ^^^^^ The CLASH settings for the above are as follows: 0.8, 2.4, 5, 35
 
         # How many goons should we allow to spawn? This will scale up towards the end of the fight to the 2nd var
         self.MAX_GOON_AMOUNT_START = 6

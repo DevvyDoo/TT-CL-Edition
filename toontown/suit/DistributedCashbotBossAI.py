@@ -65,13 +65,13 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
-        self.wantMaxSizeGoons = False
+        self.wantMaxSizeGoons = True
         self.wantLiveGoonPractice = False
         self.wantNoStunning = False
 
         self.customSpawnPositions = {}
-        self.goonMinScale = 0.8
-        self.goonMaxScale = 2.4
+        self.goonMinScale = self.ruleset.MIN_GOON_SCALE
+        self.goonMaxScale = self.ruleset.MAX_GOON_SCALE
         self.safesWanted = 5
 
         self.comboTrackers = {}  # Maps avId -> CashbotBossComboTracker instance
