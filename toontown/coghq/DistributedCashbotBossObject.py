@@ -203,7 +203,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
                 self.doHitBoss(impact)
             else:
                 self.touchedBossSoundInterval.start()
-                print '--not hard enough: %s' % impact
+                print('--not hard enough: %s' % impact)
 
     def doHitBoss(self, impact, craneId):
         # Derived classes can override this to do something specific
