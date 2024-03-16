@@ -200,7 +200,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             if impact >= self.getMinImpact():
                 print('hit! %s' % impact)
                 self.hitBossSoundInterval.start()
-                self.doHitBoss(impact)
+                self.doHitBoss(impact, self.craneId)
             else:
                 self.touchedBossSoundInterval.start()
                 print('--not hard enough: %s' % impact)
