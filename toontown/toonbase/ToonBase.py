@@ -29,9 +29,6 @@ class ToonBase(OTPBase.OTPBase):
     notify = DirectNotifyGlobal.directNotify.newCategory('ToonBase')
 
     def __init__(self):
-
-        self.global_text_properties = global_text_properties
-
         self.settings = Settings()
 
         mode = self.settings.get("borderless")
