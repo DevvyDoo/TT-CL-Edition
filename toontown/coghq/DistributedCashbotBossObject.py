@@ -10,6 +10,7 @@ from direct.fsm import FSM
 from direct.task import Task
 import math
 import copy
+import time
 smileyDoId = 1
 
 class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, FSM.FSM):
@@ -32,6 +33,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.avId = 0
         self.craneId = 0
         self.cleanedUp = 0
+        self.pickupTime = time.time()
         
         # An attribute to cache the last 7 speed for the object
         self.speeds = []
@@ -262,10 +264,13 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
     def setObjectState(self, state, avId, craneId):
 
         if state == 'G':
-            self.demand('Grabbed', avId, craneId)
+            if not base.localAvatar.doId == self.avId or avId == self.boss.doId:
+                print("SERVER GRABBING")
+                self.demand('Grabbed', avId, craneId)
         elif state == 'D':
             if self.state != 'Dropped':
-                self.demand('Dropped', avId, craneId)
+                if not base.localAvatar.doId == self.avId: 
+                    self.demand('Dropped', avId, craneId)
         elif state == 's':
             if self.state != 'SlidingFloor':
                 self.demand('SlidingFloor', avId)
@@ -332,6 +337,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.reparentTo(render)
 
     def enterLocalGrabbed(self, avId, craneId):
+        self.pickupTime = time.time()
+        print("enter LocalGrabbed: %s" % (time.time() - self.pickupTime))
         # This state is like Grabbed, except that it is only triggered
         # locally.  In this state, we have requested a grab, and we
         # will act as if we have grabbed the object successfully, but
@@ -351,6 +358,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane.grabObject(self)
 
     def exitLocalGrabbed(self):
+        print("exit LocalGrabbed: %s" % (time.time() - self.pickupTime))
         if self.newState != 'Grabbed':
             if self.crane:
                 self.crane.dropObject(self)
@@ -359,6 +367,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.showShadows()
 
     def enterGrabbed(self, avId, craneId):
+        print("enter Grabbed: %s" % (time.time() - self.pickupTime))
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
         # the doId of the crane or the doId of the boss himself.
 
@@ -388,6 +397,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane.grabObject(self)
 
     def exitGrabbed(self):
+        print("exit Grabbed: %s" % (time.time() - self.pickupTime))
+            
         if self.crane:
             self.crane.dropObject(self)
         self.prepareRelease()
@@ -395,6 +406,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         del self.crane
 
     def enterLocalDropped(self, avId, craneId):
+        print("enter LocalDropped: %s" % (time.time() - self.pickupTime))
         # As in LocalGrabbed, above, this state is entered locally
         # when we drop the safe, but we have not yet received
         # acknowledgement from the AI that we've dropped it.
@@ -413,6 +425,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.handler.setDynamicFrictionCoef(0)
 
     def exitLocalDropped(self):
+        print("exit LocalDropped: %s" % (time.time() - self.pickupTime))
         if self.newState != 'SlidingFloor' and self.newState != 'Dropped':
             self.deactivatePhysics()
             self.stopPosHprBroadcast()
@@ -420,9 +433,11 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.showShadows()
 
     def enterDropped(self, avId, craneId):
+        print("enter Dropped: %s" % (time.time() - self.pickupTime))
         # Dropped (or flung) from a player's crane, or from the boss's
         # head.  In this case, craneId is the crane we were dropped
         # from (or the boss doId).
+        
         self.avId = avId
         self.craneId = craneId
 
@@ -440,6 +455,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.hideShadows()
 
     def exitDropped(self):
+        print("exit Dropped: %s" % (time.time() - self.pickupTime))
+        
         if self.avId == base.localAvatar.doId:
             if self.newState != 'SlidingFloor':
                 self.deactivatePhysics()

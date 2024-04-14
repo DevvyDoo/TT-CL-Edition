@@ -852,10 +852,10 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.boss.craneStatesDebug(doId=self.doId, content='Sniffed something, held obj %s' % (
                 self.heldObject.getName() if self.heldObject else "Nothing"))
             
+            self.considerObjectState(obj)
             obj.d_requestGrab()
             # See if we should do anything with this object when sniffing it
             obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
-            self.considerObjectState(obj)
 
     def considerObjectState(self, obj):
 
@@ -957,7 +957,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if self.heldObject:
             obj = self.heldObject
             obj.d_requestDrop()
-            if (obj.state == 'Grabbed'):
+            if (obj.state == 'LocalGrabbed' or obj.state == 'Grabbed'):
                 # Go ahead and move the local object instance into the
                 # 'LocalDropped' state--presumably the AI will grant our
                 # request shortly anyway, and we can avoid a hitch by
