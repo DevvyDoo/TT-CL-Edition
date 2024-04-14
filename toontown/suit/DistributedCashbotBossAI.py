@@ -10,6 +10,7 @@ from toontown.coghq import DistributedCashbotBossSideCraneAI
 from toontown.coghq import DistributedCashbotBossHeavyCraneAI
 from toontown.coghq import DistributedCashbotBossSafeAI
 from toontown.suit import DistributedCashbotBossGoonAI
+from toontown.suit import DistributedGoonAI
 from toontown.coghq import DistributedCashbotBossTreasureAI
 from toontown.coghq import CraneLeagueGlobals
 from toontown.battle import BattleExperienceAI
@@ -630,7 +631,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.goonMovementTime = globalClock.getFrameTime()
         if side == None:
             if not self.wantOpeningModifications:
-                side = random.choice(['EmergeA', 'EmergeB'])
+                side = random.choice(['EmergeB', 'EmergeB'])
             else:
                 for t in self.involvedToons:
                     avId = t
@@ -687,6 +688,13 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         for goon in self.goons:
             if goon.state == 'Off':
                 return goon
+                
+    def stunAllGoons(self, task):
+        print(self.goons)
+        for goon in self.goons:
+            print(goon)
+            if goon.state != 'Off':
+                DistributedGoonAI.DistributedGoonAI.requestStunned(goon, 0)
 
     def waitForNextGoon(self, delayTime):
         currState = self.getCurrentOrNextState()
@@ -988,6 +996,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
     ##### BattleThree state #####
     def enterBattleThree(self):
+    
+        taskMgr.doMethodLater(7.5, self.stunAllGoons, "stompAllGoons")
 
         # Force unstun the CFO if he was stunned in a previous Battle Three round
         if self.attackCode == ToontownGlobals.BossCogDizzy or self.attackCode == ToontownGlobals.BossCogDizzyNow:
