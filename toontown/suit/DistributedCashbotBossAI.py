@@ -64,7 +64,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.wantAimPractice = False
         self.toonsWon = False
         self.wantCraneThreePractice = False
-        self.wantSafeSetupPractice = True
+        self.wantSafeSetupPractice = False
+        self.wantCraneOnePractice = True
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
@@ -675,6 +676,11 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
                     goon_scale = 0.605
                 else:
                     goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
+            elif self.wantCraneOnePractice:
+                if self.bossDamage >= 1 and self.bossDamage < 70:
+                    goon_scale = 0.605
+                else:
+                    goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
             else:
                 goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
 
@@ -1007,19 +1013,22 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
     ##### BattleThree state #####
     def enterBattleThree(self):
+        taskMgr.remove("stompAllGoons")
+        taskMgr.remove("destroyAllGoons")
+        taskMgr.remove("stunCFO")
         
-        if self.wantCraneThreePractice:
-            taskMgr.remove("destroyAllGoons")
+        if self.wantCraneOnePractice:
+            taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
+            taskMgr.doMethodLater(15.5, self.stunCFO, "stunCFO")
+            taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
+        elif self.wantCraneThreePractice:
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
         elif self.wantSafeSetupPractice:
-            taskMgr.remove("destroyAllGoons")
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
-            taskMgr.remove("stunCFO")
             taskMgr.doMethodLater(15.5, self.stunCFO, "stunCFO")
             taskMgr.remove("checkNearbyTwo")
             taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
         else:
-            taskMgr.remove("stompAllGoons")
             taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
 
         # Force unstun the CFO if he was stunned in a previous Battle Three round
