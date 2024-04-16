@@ -63,7 +63,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.wantCustomCraneSpawns = False
         self.wantAimPractice = False
         self.toonsWon = False
-        self.wantCraneThreePractice = True
+        self.wantCraneThreePractice = False
+        self.wantSafeSetupPractice = True
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
@@ -671,7 +672,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             goon_strength = int(self.progressRandomValue(self.ruleset.MIN_GOON_DAMAGE, self.ruleset.MAX_GOON_DAMAGE))
             if self.wantCraneThreePractice:
                 if self.bossDamage >= 0 and self.bossDamage < 70:
-                    goon_scale = 0.61
+                    goon_scale = 0.605
                 else:
                     goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
             else:
@@ -1008,8 +1009,17 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
     def enterBattleThree(self):
         
         if self.wantCraneThreePractice:
+            taskMgr.remove("destroyAllGoons")
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
+        elif self.wantSafeSetupPractice:
+            taskMgr.remove("destroyAllGoons")
+            taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
+            taskMgr.remove("stunCFO")
+            taskMgr.doMethodLater(15.5, self.stunCFO, "stunCFO")
+            taskMgr.remove("checkNearbyTwo")
+            taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
         else:
+            taskMgr.remove("stompAllGoons")
             taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
 
         # Force unstun the CFO if he was stunned in a previous Battle Three round
@@ -1202,6 +1212,9 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
         # Tell the clients now what the reward Id will be.
         '''self.d_setRewardId(self.rewardId)'''
+        
+    def stunCFO(self, task=None):
+        self.b_setAttackCode(ToontownGlobals.BossCogDizzy)
 
     def checkNearby(self, task=None):
         # Prevent helmets, stun CFO, destroy goons
@@ -1247,6 +1260,51 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         # Schedule this to be done again in 1s unless the user stops it
         taskName = self.uniqueName('CheckNearbySafes')
         taskMgr.doMethodLater(4, self.checkNearby, taskName)
+
+    def checkNearbyTwo(self, task=None):
+        # Prevent helmets, stun CFO, destroy goons
+        self.stopHelmets()
+        self.b_setAttackCode(ToontownGlobals.BossCogDizzy)
+        for goon in self.goons:
+            goon.request('Off')
+            goon.requestDelete()
+
+        nearbyDistance = 22
+
+        # Get the toon's position
+        toon = self.air.doId2do.get(self.involvedToons[0])
+        toonX = toon.getPos().x
+        toonY = toon.getPos().y
+
+        # Count nearby safes
+        nearbySafes = []
+        farSafes = []
+        farDistances = []
+        for safe in self.safes:
+            # Safe on his head doesn't count and is not a valid target to move
+            if self.heldObject is safe:
+                continue
+
+            safeX = safe.getPos().x
+            safeY = safe.getPos().y
+
+            distance = math.sqrt((toonX - safeX) ** 2 + (toonY - safeY) ** 2)
+            if distance <= nearbyDistance:
+                nearbySafes.append(safe)
+            else:
+                farDistances.append(distance)
+                farSafes.append(safe)
+
+        # Sort the possible safes by their distance away from us
+        farSafes = [x for y, x in sorted(zip(farDistances, farSafes), reverse=True)]
+
+        # If there's not enough nearby safes, relocate far ones
+        if len(nearbySafes) < 2:
+            self.relocateSafes(farSafes, 2 - len(nearbySafes), toonX, toonY)
+
+        # Schedule this to be done again in 1s unless the user stops it
+        #taskName = self.uniqueName('CheckNearbySafes')
+        #taskMgr.doMethodLater(4, self.checkNearby, taskName)
 
     def stopCheckNearby(self):
         taskName = self.uniqueName('CheckNearbySafes')
