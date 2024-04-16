@@ -124,7 +124,7 @@ class LocalAvatar(DistributedAvatar.DistributedAvatar, DistributedSmoothNode.Dis
 
         self.isSprinting = 0
 
-        self.currentMovementMode = self.TTCC_MOVEMENT_VALUES
+        self.currentMovementMode = self.TTR_MOVEMENT_VALUES
         self.updateMovementMode()
 
         self.lastForwardPress = 0

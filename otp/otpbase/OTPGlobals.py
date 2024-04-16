@@ -194,7 +194,7 @@ ToonJumpForce = 24.0
 
 # Clash movement
 ToonReverseSpeed = 8.0 * ToonSpeedFactor
-ToonRotateSpeed = 80.0 * ToonSpeedFactor
+ToonRotateSpeed = 93.6
 ToonRotateSprintingSpeed = ToonRotateSpeed
 ToonForwardSlowSpeed = 6.0
 ToonJumpSlowForce = 4.0

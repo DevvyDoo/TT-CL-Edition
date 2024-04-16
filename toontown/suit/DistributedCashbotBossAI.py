@@ -63,6 +63,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.wantCustomCraneSpawns = False
         self.wantAimPractice = False
         self.toonsWon = False
+        self.wantCraneThreePractice = True
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
@@ -668,7 +669,13 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             goon_hfov = self.progressRandomValue(70, 80)
             goon_attack_radius = self.progressRandomValue(6, 15)
             goon_strength = int(self.progressRandomValue(self.ruleset.MIN_GOON_DAMAGE, self.ruleset.MAX_GOON_DAMAGE))
-            goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
+            if self.wantCraneThreePractice:
+                if self.bossDamage >= 0 and self.bossDamage < 70:
+                    goon_scale = 0.61
+                else:
+                    goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
+            else:
+                goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
 
         # Apply multipliers if necessary
         goon_velocity *= self.ruleset.GOON_SPEED_MULTIPLIER
@@ -690,11 +697,14 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
                 return goon
                 
     def stunAllGoons(self, task):
-        print(self.goons)
         for goon in self.goons:
-            print(goon)
             if goon.state != 'Off':
                 DistributedGoonAI.DistributedGoonAI.requestStunned(goon, 0)
+                
+    def destroyAllGoons(self, task):
+        for goon in self.goons:
+            goon.request('Off')
+            goon.requestDelete()
 
     def waitForNextGoon(self, delayTime):
         currState = self.getCurrentOrNextState()
@@ -996,8 +1006,11 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
     ##### BattleThree state #####
     def enterBattleThree(self):
-    
-        taskMgr.doMethodLater(7.5, self.stunAllGoons, "stompAllGoons")
+        
+        if self.wantCraneThreePractice:
+            taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
+        else:
+            taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
 
         # Force unstun the CFO if he was stunned in a previous Battle Three round
         if self.attackCode == ToontownGlobals.BossCogDizzy or self.attackCode == ToontownGlobals.BossCogDizzyNow:
