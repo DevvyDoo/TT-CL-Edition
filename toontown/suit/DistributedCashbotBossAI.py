@@ -64,8 +64,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.wantAimPractice = False
         self.toonsWon = False
         self.wantCraneThreePractice = False
-        self.wantSafeSetupPractice = False
-        self.wantCraneOnePractice = True
+        self.wantSafeSetupPractice = True
+        self.wantCraneOnePractice = False
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
@@ -671,19 +671,15 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             goon_hfov = self.progressRandomValue(70, 80)
             goon_attack_radius = self.progressRandomValue(6, 15)
             goon_strength = int(self.progressRandomValue(self.ruleset.MIN_GOON_DAMAGE, self.ruleset.MAX_GOON_DAMAGE))
-            if self.wantCraneThreePractice:
-                if self.bossDamage >= 0 and self.bossDamage < 70:
-                    goon_scale = 0.605
-                else:
-                    goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
-            elif self.wantCraneOnePractice:
+            if self.wantCraneThreePractice or True:
                 if self.bossDamage >= 1 and self.bossDamage < 70:
-                    goon_scale = 0.605
+                    goon_scale = 0.6092
                 else:
                     goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
             else:
                 goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
 
+        print(goon_scale)
         # Apply multipliers if necessary
         goon_velocity *= self.ruleset.GOON_SPEED_MULTIPLIER
 
@@ -1010,14 +1006,19 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
     def waitForNextAttack(self, delayTime):
         DistributedBossCogAI.DistributedBossCogAI.waitForNextAttack(self, delayTime)
         self.debug(content='Next attack in %.2fs' % delayTime)
+        
+    def attackBigBossCog(self, task=None):
+        self.b_setBossDamage(self.bossDamage + 18)
 
     ##### BattleThree state #####
     def enterBattleThree(self):
         taskMgr.remove("stompAllGoons")
         taskMgr.remove("destroyAllGoons")
         taskMgr.remove("stunCFO")
+        taskMgr.remove("checkNearbyTwo")
         
         if self.wantCraneOnePractice:
+            #taskMgr.doMethodLater(0.5, self.attackBigBossCog, "attackBigBossCog")
             taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
             taskMgr.doMethodLater(15.5, self.stunCFO, "stunCFO")
             taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
@@ -1026,8 +1027,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         elif self.wantSafeSetupPractice:
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
             taskMgr.doMethodLater(15.5, self.stunCFO, "stunCFO")
-            taskMgr.remove("checkNearbyTwo")
-            taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
+            #taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
         else:
             taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
 
