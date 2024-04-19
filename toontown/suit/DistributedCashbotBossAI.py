@@ -64,8 +64,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.wantAimPractice = False
         self.toonsWon = False
         self.wantCraneThreePractice = False
-        self.wantSafeSetupPractice = True
-        self.wantCraneOnePractice = False
+        self.wantSafeSetupPractice = False
+        self.wantCraneOnePractice = True
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
@@ -673,7 +673,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             goon_strength = int(self.progressRandomValue(self.ruleset.MIN_GOON_DAMAGE, self.ruleset.MAX_GOON_DAMAGE))
             if self.wantCraneThreePractice or True:
                 if self.bossDamage >= 1 and self.bossDamage < 70:
-                    goon_scale = 0.6092
+                    goon_scale = 0.615
                 else:
                     goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
             else:
@@ -1020,8 +1020,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         if self.wantCraneOnePractice:
             #taskMgr.doMethodLater(0.5, self.attackBigBossCog, "attackBigBossCog")
             taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
-            taskMgr.doMethodLater(15.5, self.stunCFO, "stunCFO")
-            taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
+            taskMgr.doMethodLater(15.3, self.stunCFO, "stunCFO")
+            #taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
         elif self.wantCraneThreePractice:
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
         elif self.wantSafeSetupPractice:
@@ -1224,6 +1224,9 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         
     def stunCFO(self, task=None):
         self.b_setAttackCode(ToontownGlobals.BossCogDizzy)
+        for goon in self.goons:
+            goon.request('Off')
+            goon.requestDelete()
 
     def checkNearby(self, task=None):
         # Prevent helmets, stun CFO, destroy goons
