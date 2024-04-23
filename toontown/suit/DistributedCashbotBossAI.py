@@ -671,9 +671,11 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             goon_hfov = self.progressRandomValue(70, 80)
             goon_attack_radius = self.progressRandomValue(6, 15)
             goon_strength = int(self.progressRandomValue(self.ruleset.MIN_GOON_DAMAGE, self.ruleset.MAX_GOON_DAMAGE))
+            elapsed = globalClock.getFrameTime() - self.battleThreeStart
+            print("Elapsed Time: %s" % elapsed)
             if self.wantCraneThreePractice or True:
-                if self.bossDamage >= 1 and self.bossDamage < 70:
-                    goon_scale = 0.615
+                if elapsed > 5:
+                    goon_scale = 0.61
                 else:
                     goon_scale = self.progressRandomValue(self.goonMinScale, self.goonMaxScale, noRandom=self.wantMaxSizeGoons)
             else:
@@ -708,6 +710,12 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         for goon in self.goons:
             goon.request('Off')
             goon.requestDelete()
+                
+    def destroyInitialGoons(self, task):
+        for goon in self.goons:
+            if goon.scale < 0.6:
+                goon.request('Off')
+                goon.requestDelete()
 
     def waitForNextGoon(self, delayTime):
         currState = self.getCurrentOrNextState()
@@ -1014,22 +1022,27 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
     def enterBattleThree(self):
         taskMgr.remove("stompAllGoons")
         taskMgr.remove("destroyAllGoons")
+        taskMgr.remove("destroyInitialGoons")
         taskMgr.remove("stunCFO")
         taskMgr.remove("checkNearbyTwo")
+        taskMgr.remove("attackBigBossCog")
+        self.goons = []
         
         if self.wantCraneOnePractice:
             #taskMgr.doMethodLater(0.5, self.attackBigBossCog, "attackBigBossCog")
-            taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
-            taskMgr.doMethodLater(15.3, self.stunCFO, "stunCFO")
+            taskMgr.doMethodLater(7, self.stunAllGoons, "stompAllGoons")
+            taskMgr.doMethodLater(7, self.attackBigBossCog, "attackBigBossCog")
+            taskMgr.doMethodLater(12.5, self.destroyInitialGoons, "destroyInitialGoons")
+            taskMgr.doMethodLater(14.5, self.stunCFO, "stunCFO")
             #taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
         elif self.wantCraneThreePractice:
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
         elif self.wantSafeSetupPractice:
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
-            taskMgr.doMethodLater(15.5, self.stunCFO, "stunCFO")
+            taskMgr.doMethodLater(14.5, self.stunCFO, "stunCFO")
             #taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
         else:
-            taskMgr.doMethodLater(8.5, self.stunAllGoons, "stompAllGoons")
+            taskMgr.doMethodLater(7, self.stunAllGoons, "stompAllGoons")
 
         # Force unstun the CFO if he was stunned in a previous Battle Three round
         if self.attackCode == ToontownGlobals.BossCogDizzy or self.attackCode == ToontownGlobals.BossCogDizzyNow:
