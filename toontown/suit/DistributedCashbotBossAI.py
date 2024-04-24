@@ -1016,7 +1016,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.debug(content='Next attack in %.2fs' % delayTime)
         
     def attackBigBossCog(self, task=None):
-        self.b_setBossDamage(self.bossDamage + 18)
+        self.b_setBossDamage(self.bossDamage + 12)
 
     ##### BattleThree state #####
     def enterBattleThree(self):
@@ -1026,12 +1026,14 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         taskMgr.remove("stunCFO")
         taskMgr.remove("checkNearbyTwo")
         taskMgr.remove("attackBigBossCog")
+        taskMgr.remove("attackBigBossCog2")
         self.goons = []
         
         if self.wantCraneOnePractice:
             #taskMgr.doMethodLater(0.5, self.attackBigBossCog, "attackBigBossCog")
-            taskMgr.doMethodLater(7, self.stunAllGoons, "stompAllGoons")
-            taskMgr.doMethodLater(7, self.attackBigBossCog, "attackBigBossCog")
+            taskMgr.doMethodLater(7.7, self.stunAllGoons, "stompAllGoons")
+            #taskMgr.doMethodLater(5.8, self.attackBigBossCog, "attackBigBossCog")
+            #taskMgr.doMethodLater(6.5, self.attackBigBossCog, "attackBigBossCog2")
             taskMgr.doMethodLater(12.5, self.destroyInitialGoons, "destroyInitialGoons")
             taskMgr.doMethodLater(14.5, self.stunCFO, "stunCFO")
             #taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
