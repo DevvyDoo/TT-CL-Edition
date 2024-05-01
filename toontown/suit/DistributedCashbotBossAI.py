@@ -65,11 +65,11 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.toonsWon = False
         self.wantCraneThreePractice = False
         self.wantSafeSetupPractice = False
-        self.wantCraneOnePractice = True
+        self.wantCraneOnePractice = False
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
-        self.wantMaxSizeGoons = True
+        self.wantMaxSizeGoons = False
         self.wantLiveGoonPractice = False
         self.wantNoStunning = False
 
@@ -983,7 +983,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
     def setupSpawnpoints(self):
         self.toonSpawnpointOrder = [i for i in range(8)]
-        if self.ruleset.RANDOM_SPAWN_POSITIONS:
+        if self.ruleset.RANDOM_SPAWN_POSITIONS or False:
             random.shuffle(self.toonSpawnpointOrder)
         self.d_setToonSpawnpointOrder()
 
@@ -1032,10 +1032,10 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         if self.wantCraneOnePractice:
             #taskMgr.doMethodLater(0.5, self.attackBigBossCog, "attackBigBossCog")
             taskMgr.doMethodLater(7.7, self.stunAllGoons, "stompAllGoons")
-            #taskMgr.doMethodLater(5.8, self.attackBigBossCog, "attackBigBossCog")
-            #taskMgr.doMethodLater(6.5, self.attackBigBossCog, "attackBigBossCog2")
+            #taskMgr.doMethodLater(5.5, self.attackBigBossCog, "attackBigBossCog")
+            #taskMgr.doMethodLater(5.97, self.attackBigBossCog, "attackBigBossCog2")
             taskMgr.doMethodLater(12.5, self.destroyInitialGoons, "destroyInitialGoons")
-            taskMgr.doMethodLater(14.5, self.stunCFO, "stunCFO")
+            #taskMgr.doMethodLater(14.5, self.stunCFO, "stunCFO")
             #taskMgr.doMethodLater(19, self.checkNearbyTwo, "checkNearbyTwo")
         elif self.wantCraneThreePractice:
             taskMgr.doMethodLater(2, self.destroyAllGoons, "destroyAllGoons")
