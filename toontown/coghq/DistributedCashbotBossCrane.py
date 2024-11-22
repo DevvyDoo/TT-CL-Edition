@@ -19,6 +19,11 @@ from toontown.suit import DistributedCashbotBossGoon
 from toontown.coghq import DistributedCashbotBossSafe
 import random
 
+#from toontown.coghq.logger_utils import get_state_logger
+
+#state_logger = get_state_logger()
+#state_logger.info("DistributedCashbotBossCrane")
+
 class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
     """ This class represents a crane holding a magnet on a cable.
     The DistributedCashbotBoss creates four of these for the CFO
@@ -852,10 +857,13 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.boss.craneStatesDebug(doId=self.doId, content='Sniffed something, held obj %s' % (
                 self.heldObject.getName() if self.heldObject else "Nothing"))
             
+            self.considerObjectState(obj)
             obj.d_requestGrab()
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, __sniffedSomething - requesting object Grab, obj.requestGrab()")
             # See if we should do anything with this object when sniffing it
             obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
-            self.considerObjectState(obj)
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, __sniffedSomething - demanding object LocalGrabbed, obj.demand(...)"), 
+
 
     def considerObjectState(self, obj):
 
@@ -865,10 +873,15 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         # If this is a goon, wake it up
         if isinstance(obj, DistributedCashbotBossGoon.DistributedCashbotBossGoon):
             obj.d_requestWalk()
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, considerObjectState - goon to wake up, obj.d_requestWalk()"),
             obj.setObjectState('W', 0, obj.craneId)  # wake goon up
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, considerObjectState - goon to wake up, obj.setObjectState('W', ...)"),
 
     def grabObject(self, obj):
         # This is only called by DistributedCashbotBossObject.enterGrabbed().
+
+        #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, grabObject")
+
         self.boss.craneStatesDebug(doId=self.doId, content='pre-Grabbing object %s, currently holding: %s' % (obj.getName(), self.heldObject.getName() if self.heldObject else "Nothing"))
         if self.state == 'Off':
             return
@@ -878,6 +891,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         # we should have verified this already with the above
         # assertion.
         if self.heldObject != None:
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, grabObject - holding an object, self.releaseObject()")
             self.releaseObject()
             
         self.__deactivateSniffer()
@@ -898,12 +912,16 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if self.avId == localAvatar.doId and not self.magnetOn:
             # We got a late grab.  Grab it, then immediately drop it.
             self.releaseObject()
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, grabObject - late grab, self.releaseObject()")
             
         self.boss.craneStatesDebug(doId=self.doId,
                                    content='post-Grabbing object %s, currently holding: %s' % (obj.getName(), self.heldObject.getName() if self.heldObject else "Nothing"))
+        #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, grabObject - successful")
 
     def dropObject(self, obj):
         # This is only called by DistributedCashbotBossObject.exitGrabbed().
+
+        #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, dropObject")
         
         self.boss.craneStatesDebug(doId=self.doId,
                                    content='pre-Dropping object %s, currently holding: %s' % (obj.getName(), self.heldObject.getName() if self.heldObject else "Nothing"))
@@ -941,6 +959,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.rotateSpeed = self.emptyRotateSpeed
         self.boss.craneStatesDebug(doId=self.doId,
                                    content='post-Dropping object %s, currently holding: %s' % (obj.getName(), self.heldObject.getName() if self.heldObject else "Nothing"))
+        #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, dropObject - successful")
 
     def releaseObject(self):
         # Don't confuse this method with dropObject.  That method
@@ -950,6 +969,9 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         # to drop itself, so that the object will set its state
         # appropriately.  A side-effect of this call will be an
         # eventual call to dropObject() by the newly-released object.
+
+        #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, releaseObject")
+
         if self.boss:
             self.boss.craneStatesDebug(doId=self.doId,
                                    content='pre-Releasing object, currently holding: %s' % (self.heldObject.getName() if self.heldObject else "Nothing"))
@@ -957,7 +979,8 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if self.heldObject:
             obj = self.heldObject
             obj.d_requestDrop()
-            if (obj.state == 'Grabbed'):
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, releaseObject - dropping held object, obj.d_requestDrop()")
+            if (obj.state == 'Grabbed' or obj.state == 'LocalGrabbed'):
                 # Go ahead and move the local object instance into the
                 # 'LocalDropped' state--presumably the AI will grant our
                 # request shortly anyway, and we can avoid a hitch by
@@ -967,10 +990,12 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
                 # object's position until we *know* we're the object's
                 # owner.
                 obj.demand('LocalDropped', localAvatar.doId, self.doId)
+                #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, releaseObject - object is Grabbed, obj.demand('LocalDropped', localAvatar.doId, self.doId)")
 
         if self.boss:
             self.boss.craneStatesDebug(doId=self.doId,
                                    content='post-Releasing object, currently holding: %s' % (self.heldObject.getName() if self.heldObject else "Nothing"))
+        #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, releaseObject - successful")
 
     def __hitTrigger(self, event):
         self.d_requestControl()

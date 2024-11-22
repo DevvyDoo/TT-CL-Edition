@@ -6,6 +6,12 @@ from otp.otpbase import OTPGlobals
 from direct.fsm import FSM
 from direct.task import Task
 
+#from toontown.coghq.logger_utils import get_state_logger
+
+# Fetch the shared state_logger
+#state_logger = get_state_logger()
+#state_logger.info("DistributedCashbotBossObjectAI Initialized")
+
 class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNodeAI, FSM.FSM):
 
     """ This is an object that can be picked up an dropped in the
@@ -87,9 +93,12 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
     def requestGrab(self):
         # A client wants to pick up the object with his magnet.
         avId = self.air.getAvatarIdFromSender()
+        #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestGrab STARTED")
     
         # Cannot grab an object that is already grabbed by another crane!
         if self.state == 'Grabbed' or self.state == 'LocalGrabbed':
+            self.sendUpdateToAvatarId(avId, 'rejectGrab', [])
+            #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestGrab REJECTED (Grabbed by another player)")
             return
         
         if self.state != 'Grabbed' and self.state != 'Off':
@@ -98,20 +107,24 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
             craneId, objectId = self.__getCraneAndObject(avId)
             if craneId != 0 and objectId == 0:
                 self.demand('Grabbed', avId, craneId)
+                #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestGrab CONFIRMED")
                 return
         
         # The client can't have it.
         self.sendUpdateToAvatarId(avId, 'rejectGrab', [])
+        #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestGrab REJECTED")
 
     def requestDrop(self):
         # The client holding the object has dropped it from his magnet
         # (but is still controlling its free-fall).
         avId = self.air.getAvatarIdFromSender()
+        #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestDrop STARTED")
         
         if avId == self.avId and self.state == 'Grabbed':
             craneId, objectId = self.__getCraneAndObject(avId)
             if craneId != 0 and objectId == self.doId:
                 self.demand('Dropped', avId, craneId)
+                #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestDrop CONFIRMED")
 
     def hitFloor(self):
         # The client managing the dropping object tells us that it has
@@ -167,21 +180,27 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
     ### FSM States ###
 
     def enterGrabbed(self, avId, craneId):
+        #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, enterGrabbed")
         self.avId = avId
         self.craneId = craneId
         self.__setCraneObject(self.craneId, self.doId)
         self.d_setObjectState('G', avId, craneId)
 
     def exitGrabbed(self):
+        avId = None
+        #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, exitGrabbed")
         self.__setCraneObject(self.craneId, 0)
 
     def enterDropped(self, avId, craneId):
+        #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, enterDropped")
         self.avId = avId
         self.craneId = craneId
         self.d_setObjectState('D', avId, craneId)
         self.startWaitFree(5)
 
     def exitDropped(self):
+        avId = None
+        #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, exitDropped")
         self.stopWaitFree()
 
     def enterSlidingFloor(self, avId):

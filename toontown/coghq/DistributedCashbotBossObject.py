@@ -12,6 +12,11 @@ import math
 import copy
 smileyDoId = 1
 
+#from toontown.coghq.logger_utils import get_state_logger
+
+#state_logger = get_state_logger()
+##state_logger.info("DistributedCashbotBossObject")
+
 class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, FSM.FSM):
 
     """ This is an object that can be picked up an dropped in the
@@ -261,11 +266,17 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
     def setObjectState(self, state, avId, craneId):
 
+        if self.state == 'Off':
+            return
+
         if state == 'G':
-            self.demand('Grabbed', avId, craneId)
+            if self.state != 'LocalDropped':
+                self.demand('Grabbed', avId, craneId)
+                #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{avId}, Current State: {self.state}, setObjectState - Grabbed")
         elif state == 'D':
             if self.state != 'Dropped':
                 self.demand('Dropped', avId, craneId)
+                #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{avId}, Current State: {self.state}, setObjectState - Dropped")
         elif state == 's':
             if self.state != 'SlidingFloor':
                 self.demand('SlidingFloor', avId)
@@ -273,25 +284,21 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.demand('Free')
         else:
             self.notify.error('Invalid state from AI: %s' % state)
-            
-    def __getCraneAndObject(self, avId):
-        if self.boss and self.boss.cranes != None:
-            for crane in self.boss.cranes.values():
-                if crane.avId == avId:
-                    return (crane.doId, self.doId)
-
-        return (0, 0)
 
     def d_requestGrab(self):
         self.sendUpdate('requestGrab')
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, grab request STARTED")
 
     def rejectGrab(self):
         # The server tells us we can't have it for whatever reason.
         if self.state == 'LocalGrabbed':
             self.demand('LocalDropped', self.avId, self.craneId)
+            #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, grab request REJECTED")
 
     def d_requestDrop(self):
         self.sendUpdate('requestDrop')
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, drop request STARTED")
+        
 
     def d_hitFloor(self):
         self.sendUpdate('hitFloor')
@@ -340,6 +347,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
         # We're not allowed to drop the object directly from this
         # state.
+
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterLocalGrabbed")
         
         self.avId = avId
         self.craneId = craneId
@@ -349,16 +358,20 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.hideShadows()
         self.prepareGrab()
         self.crane.grabObject(self)
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterLocalGrabbed - self.crane.grabObject(self)")
 
     def exitLocalGrabbed(self):
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitLocalGrabbed")
         if self.newState != 'Grabbed':
             if self.crane:
                 self.crane.dropObject(self)
+                #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterLocalGrabbed - self.crane.dropObject(self)")
             self.prepareRelease()
             del self.crane
             self.showShadows()
 
     def enterGrabbed(self, avId, craneId):
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterGrabbed")
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
         # the doId of the crane or the doId of the boss himself.
 
@@ -368,11 +381,13 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
                 # did, in fact, grab this object with the expected
                 # crane; we don't need to do anything else in this
                 # state.
+                #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterGrabbed - grab confirmed (LocalGrabbed -> Grabbed)")
                 return
             else:
                 # Whoops, we had previously grabbed it locally, but it
                 # turns out someone else grabbed it instead.
                 self.crane.dropObject(self)
+                #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterGrabbed - someone else grabbed it, self.crane.dropObject(self)")
                 self.prepareRelease()
         
         self.avId = avId
@@ -386,10 +401,13 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.hideShadows()
         self.prepareGrab()
         self.crane.grabObject(self)
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterGrabbed - grabbing object, self.crane.grabObject(self)")
 
     def exitGrabbed(self):
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitGrabbed")
         if self.crane:
             self.crane.dropObject(self)
+            #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitGrabbed - self.crane.dropObject(self)")
         self.prepareRelease()
         self.showShadows()
         del self.crane
@@ -398,6 +416,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # As in LocalGrabbed, above, this state is entered locally
         # when we drop the safe, but we have not yet received
         # acknowledgement from the AI that we've dropped it.
+
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterLocalDropped")
         
         self.avId = avId
         self.craneId = craneId
@@ -413,6 +433,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.handler.setDynamicFrictionCoef(0)
 
     def exitLocalDropped(self):
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitLocalDropped")
         if self.newState != 'SlidingFloor' and self.newState != 'Dropped':
             self.deactivatePhysics()
             self.stopPosHprBroadcast()
@@ -423,6 +444,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # Dropped (or flung) from a player's crane, or from the boss's
         # head.  In this case, craneId is the crane we were dropped
         # from (or the boss doId).
+
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterDropped")
+
         self.avId = avId
         self.craneId = craneId
 
@@ -440,6 +464,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.hideShadows()
 
     def exitDropped(self):
+        #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitDropped")
         if self.avId == base.localAvatar.doId:
             if self.newState != 'SlidingFloor':
                 self.deactivatePhysics()

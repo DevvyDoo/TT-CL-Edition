@@ -5,6 +5,12 @@ from toontown.toonbase import ToontownGlobals
 from otp.otpbase import OTPGlobals
 from direct.fsm import FSM
 
+from toontown.coghq.logger_utils import get_state_logger
+
+# Fetch the shared state_logger
+#state_logger = get_state_logger()
+#state_logger.info("DistributedCashbotBossCraneAI Initialized")
+
 class DistributedCashbotBossCraneAI(DistributedObjectAI.DistributedObjectAI, FSM.FSM):
 
     """ This is one of four/six/eight magnet cranes in the corner of the CFO
@@ -41,6 +47,7 @@ class DistributedCashbotBossCraneAI(DistributedObjectAI.DistributedObjectAI, FSM
     def setObjectID(self, objId):
         self.objectId = objId
         self.boss.craneStatesDebug(doId=self.doId, content='(Server) grabbing object: %s' % objId)
+        #state_logger.info(f"[Server] [AI-Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, setObjectID - crane grabs object and sets its ID"),
 
     # Should we multiply any damage done from this crane?
     def getDamageMultiplier(self):
@@ -113,6 +120,7 @@ class DistributedCashbotBossCraneAI(DistributedObjectAI.DistributedObjectAI, FSM
             # grab.  In this case, drop the object.
             obj = self.air.doId2do[self.objectId]
             obj.request('Dropped', self.avId, self.doId)
+            #state_logger.info(f"[Server] [AI-Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitControlled - crane force drops currently held Object"),
 
     def enterFree(self):
         self.avId = 0
