@@ -12,10 +12,10 @@ import math
 import copy
 smileyDoId = 1
 
-#from toontown.coghq.logger_utils import get_state_logger
+from toontown.coghq.logger_utils import get_state_logger
 
-#state_logger = get_state_logger()
-##state_logger.info("DistributedCashbotBossObject")
+state_logger = get_state_logger()
+state_logger.info("DistributedCashbotBossObject")
 
 class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, FSM.FSM):
 
@@ -181,6 +181,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         if self.state == 'Dropped' or self.state == 'LocalDropped':
             self.d_hitFloor()
             self.demand('SlidingFloor', localAvatar.doId)
+            #state_logger.info(f"Client: State update for Object-{self.doId}, New State: SlidingFloor, AvId: {base.localAvatar.doId}")
 
     def __hitGoon(self, entry):
         if self.state == 'Dropped' or self.state == 'LocalDropped':
@@ -238,6 +239,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         if abs(v[0]) < 0.0001 and abs(v[1]) < 0.0001:
             self.d_requestFree()
             self.demand('Free')
+            #state_logger.info(f"Client: State update for Object-{self.doId}, New State: Free, AvId: {base.localAvatar.doId}")
             
         return Task.cont
 
@@ -271,16 +273,20 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
         if state == 'G':
             if self.state != 'LocalDropped':
+                #state_logger.info(f"Client: State update for Object-{self.doId}, Current State: {self.state}, New State: Grabbed, AvId: {base.localAvatar.doId}")
                 self.demand('Grabbed', avId, craneId)
                 #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{avId}, Current State: {self.state}, setObjectState - Grabbed")
         elif state == 'D':
             if self.state != 'Dropped':
+                #state_logger.info(f"Client: State update for Object-{self.doId}, Current State: {self.state}, New State: Dropped, AvId: {base.localAvatar.doId}")
                 self.demand('Dropped', avId, craneId)
                 #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{avId}, Current State: {self.state}, setObjectState - Dropped")
         elif state == 's':
             if self.state != 'SlidingFloor':
+                #state_logger.info(f"Client: State update for Object-{self.doId}, Current State: {self.state}, New State: SlidingFloor, AvId: {base.localAvatar.doId}")
                 self.demand('SlidingFloor', avId)
         elif state == 'F':
+            #state_logger.info(f"Client: State update for Object-{self.doId}, Current State: {self.state}, New State: Free, AvId: {base.localAvatar.doId}")
             self.demand('Free')
         else:
             self.notify.error('Invalid state from AI: %s' % state)
@@ -293,6 +299,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # The server tells us we can't have it for whatever reason.
         if self.state == 'LocalGrabbed':
             self.demand('LocalDropped', self.avId, self.craneId)
+            #state_logger.info(f"Client: State update for Object-{self.doId}, Current State: {self.state}, New State: LocalDropped, AvId: {base.localAvatar.doId}")
             #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, grab request REJECTED")
 
     def d_requestDrop(self):
@@ -325,6 +332,29 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
     ### FSM States ###
 
+    def startPosMonitoring(self):
+        taskName = self.uniqueName('monitorPosition')
+        taskMgr.remove(taskName)  # Remove any existing monitoring
+        taskMgr.doMethodLater(0.1, self.__monitorPosition, taskName)
+
+    def stopPosMonitoring(self):
+        taskName = self.uniqueName('monitorPosition')
+        taskMgr.remove(taskName)
+
+    def __monitorPosition(self, task):
+
+        if self.craneId == self.boss.doId:
+            return
+        
+        worldPos = self.getPos(render)
+
+        gripperPos = self.crane.gripper.getPos(render) if hasattr(self, 'crane') and self.crane else None
+        #state_logger.info(f"Object {self.doId} in state {self.state}:")
+        #state_logger.info(f"World pos: {worldPos}")
+        #state_logger.info(f"Gripper pos: {gripperPos}")
+        #state_logger.info(f"Parent: {self.getParent()}")
+        return task.again
+
     def enterOff(self):
         # In state Off, the object is not parented to the scene graph.
         # In all other states, it is.
@@ -339,6 +369,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.reparentTo(render)
 
     def enterLocalGrabbed(self, avId, craneId):
+        self.startPosMonitoring()
         # This state is like Grabbed, except that it is only triggered
         # locally.  In this state, we have requested a grab, and we
         # will act as if we have grabbed the object successfully, but
@@ -356,11 +387,12 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane = self.cr.doId2do.get(craneId)
 
         self.hideShadows()
-        self.prepareGrab()
+        self.prepareGrab()    
         self.crane.grabObject(self)
         #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterLocalGrabbed - self.crane.grabObject(self)")
 
     def exitLocalGrabbed(self):
+        self.stopPosMonitoring()
         #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitLocalGrabbed")
         if self.newState != 'Grabbed':
             if self.crane:
@@ -371,9 +403,12 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.showShadows()
 
     def enterGrabbed(self, avId, craneId):
+        self.startPosMonitoring()
         #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterGrabbed")
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
         # the doId of the crane or the doId of the boss himself.
+
+        self.crane = self.cr.doId2do.get(craneId)
 
         if self.oldState == 'LocalGrabbed':
             if craneId == self.craneId:
@@ -404,6 +439,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, enterGrabbed - grabbing object, self.crane.grabObject(self)")
 
     def exitGrabbed(self):
+        self.stopPosMonitoring()
         #state_logger.info(f"[Client] [Object-{self.doId}], AvId-{self.avId}, Current State: {self.state}, exitGrabbed")
         if self.crane:
             self.crane.dropObject(self)
@@ -423,9 +459,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.craneId = craneId
 
         self.crane = self.cr.doId2do.get(craneId)
-        
+
+        # Just activate physics for visual feedback, but don't broadcast yet
         self.activatePhysics()
-        self.startPosHprBroadcast()
         self.hideShadows()
 
         # Set slippery physics so it will slide off the boss.
@@ -455,12 +491,15 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         if self.avId == base.localAvatar.doId:
             self.activatePhysics()
             self.startPosHprBroadcast(period=.05)
+            #state_logger.info(f"AvId-{base.localAvatar.doId} enterDropped, STARTED broadcasting posHpr from Crane-{self.craneId} to Object-{self.doId}")
 
             # Set slippery physics so it will slide off the boss.
             self.handler.setStaticFrictionCoef(0)
             self.handler.setDynamicFrictionCoef(0)
         else:
             self.startSmooth()
+            #state_logger.info(f"AvId-{base.localAvatar.doId} enterDropped, STARTED smoothing posHpr for Object-{self.doId}")
+
         self.hideShadows()
 
     def exitDropped(self):
@@ -469,8 +508,10 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             if self.newState != 'SlidingFloor':
                 self.deactivatePhysics()
                 self.stopPosHprBroadcast()
+                #state_logger.info(f"AvId-{base.localAvatar.doId} exitDropped, STOPPED broadcasting posHpr from Crane-{self.craneId} to Object-{self.doId}")
         else:
             self.stopSmooth()
+            #state_logger.info(f"AvId-{base.localAvatar.doId} exitDropped, STOPPED smoothing posHpr for Object-{self.doId}")
 
         del self.crane
         self.showShadows()
@@ -489,6 +530,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         if self.avId == base.localAvatar.doId:
             self.activatePhysics()
             self.startPosHprBroadcast(period=.05)
+            #state_logger.info(f"AvId-{base.localAvatar.doId} enterSlidingFloor, STARTED broadcasting posHpr from Crane-{self.craneId} to Object-{self.doId}")
             
             self.handler.setStaticFrictionCoef(0.9)
             self.handler.setDynamicFrictionCoef(0.5)
@@ -499,6 +541,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
                 taskMgr.add(self.__watchDrift, self.watchDriftName)
         else:
             self.startSmooth()
+            #state_logger.info(f"AvId-{base.localAvatar.doId} enterSlidingFloor, STARTED smoothing posHpr for Object-{self.doId}")
             
         self.hitFloorSoundInterval.start()
 
@@ -507,8 +550,10 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             taskMgr.remove(self.watchDriftName)
             self.deactivatePhysics()
             self.stopPosHprBroadcast()
+            #state_logger.info(f"AvId-{base.localAvatar.doId} exitSlidingFloor, STOPPED broadcasting posHpr from Crane-{self.craneId} to Object-{self.doId}")
         else:
             self.stopSmooth()
+            #state_logger.info(f"AvId-{base.localAvatar.doId} exitSlidingFloor, STOPPED smoothing posHpr for Object-{self.doId}")
 
     def enterFree(self):
         self.resetSpeedCaching()
