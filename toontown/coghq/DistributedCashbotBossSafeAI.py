@@ -120,7 +120,7 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
     def requestGrab(self):
         avId = self.air.getAvatarIdFromSender()
         if self.state != 'Grabbed' and self.state != 'Off':
-            craneId, objectId = self.__getCraneAndObject(avId)
+            craneId, objectId = self.getCraneAndObject(avId)
             crane = simbase.air.doId2do.get(craneId)
             if crane:
                 if craneId != 0 and objectId == 0:
@@ -132,7 +132,7 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
                     return
             self.sendUpdateToAvatarId(avId, 'rejectGrab', [])
             
-    def __getCraneAndObject(self, avId):
+    def getCraneAndObject(self, avId):
         if self.boss and self.boss.cranes != None:
             for crane in self.boss.cranes:
                 if crane.avId == avId:

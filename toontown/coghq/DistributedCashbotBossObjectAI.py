@@ -104,7 +104,7 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
         if self.state != 'Grabbed' and self.state != 'Off':
             # Also make sure the client is controlling some crane and
             # hasn't grabbed some other object already.
-            craneId, objectId = self.__getCraneAndObject(avId)
+            craneId, objectId = self.getCraneAndObject(avId)
             if craneId != 0 and objectId == 0:
                 self.demand('Grabbed', avId, craneId)
                 #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestGrab CONFIRMED")
@@ -121,7 +121,7 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
         #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestDrop STARTED")
         
         if avId == self.avId and self.state == 'Grabbed' and self.state != 'Off':
-            craneId, objectId = self.__getCraneAndObject(avId)
+            craneId, objectId = self.getCraneAndObject(avId)
             if craneId != 0 and objectId == self.doId:
                 self.demand('Dropped', avId, craneId)
                 #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestDrop CONFIRMED")
@@ -153,7 +153,7 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
             self.doFree(None)
         return
 
-    def __getCraneAndObject(self, avId):
+    def getCraneAndObject(self, avId):
         # Returns the pair (craneId, objectId) representing the crane
         # that the indicated avatar is controlling, or 0 if none, and
         # the object currently held by that crane's magnet, or 0 if

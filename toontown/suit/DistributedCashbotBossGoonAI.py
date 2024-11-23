@@ -456,7 +456,7 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
 
     def requestWalk(self):
         avId = self.air.getAvatarIdFromSender()
-        if avId == self.avId and self.state == 'Stunned' and self.state != 'Off':
-            craneId, objectId = self.__getCraneAndObject(avId)
+        if avId == self.avId and self.state == 'Stunned':
+            craneId, objectId = self.getCraneAndObject(avId)
             if craneId != 0 and objectId == self.doId:
                 self.demand('Walk', avId, craneId)
