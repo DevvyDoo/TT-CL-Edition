@@ -19,10 +19,10 @@ from toontown.suit import DistributedCashbotBossGoon
 from toontown.coghq import DistributedCashbotBossSafe
 import random
 
-from toontown.coghq.logger_utils import get_state_logger
+#from toontown.coghq.logger_utils import get_state_logger
 
-state_logger = get_state_logger()
-state_logger.info("DistributedCashbotBossCrane")
+#state_logger = get_state_logger()
+#state_logger.info("DistributedCashbotBossCrane")
 
 class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
     """ This class represents a crane holding a magnet on a cable.
@@ -833,6 +833,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         return Task.cont
 
     def __sniffedSomething(self, entry):
+    
         # Something was sniffed as grabbable.
         np = entry.getIntoNodePath()
         
@@ -855,12 +856,11 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if obj and obj.state != 'LocalDropped' and (obj.state != 'Dropped' or obj.craneId != self.doId):
             self.boss.craneStatesDebug(doId=self.doId, content='Sniffed something, held obj %s' % (
                 self.heldObject.getName() if self.heldObject else "Nothing"))
-
+            
             self.considerObjectState(obj)
             obj.d_requestGrab()
             #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, __sniffedSomething - requesting object Grab, obj.requestGrab()")
             # See if we should do anything with this object when sniffing it
-            #state_logger.info(f"Client: State update for Object-{obj.doId}, Current State: {obj.state}, New State: LocalGrabbed, AvId: {base.localAvatar.doId}")
             obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
             #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, __sniffedSomething - demanding object LocalGrabbed, obj.demand(...)"), 
 
@@ -900,26 +900,8 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         
         if obj.lerpInterval:
             obj.lerpInterval.finish()
-
-        snapToMagnet = Parallel(
-            obj.posInterval(0.2, Point3(*obj.grabPos), blendType='easeIn'),
-            obj.quatInterval(0.2, VBase3(obj.getH(), 0, 0), blendType='easeIn')
-        )
-
-        adjustAfterAttach = Sequence(
-            Wait(0.2),  # Wait for the snap to complete
-            Parallel(
-                obj.posInterval(0.4, Point3(*obj.grabPos), blendType='easeOut'),
-                obj.quatInterval(0.4, VBase3(obj.getH(), 0, 0), blendType='easeOut')
-            )
-        )
-        
-        obj.lerpInterval = Parallel(
-            snapToMagnet,
-            adjustAfterAttach,
-            obj.toMagnetSoundInterval
-        )
-
+            
+        obj.lerpInterval = Parallel(obj.posInterval(ToontownGlobals.CashbotBossToMagnetTime, Point3(*obj.grabPos)), obj.quatInterval(ToontownGlobals.CashbotBossToMagnetTime, VBase3(obj.getH(), 0, 0)), obj.toMagnetSoundInterval)
         obj.lerpInterval.start()
         
         self.heldObject = obj
@@ -1007,10 +989,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
                 # because we can't start broadcasting updates on the
                 # object's position until we *know* we're the object's
                 # owner.
-                
-                #state_logger.info(f"Client: State update for Object-{obj.doId}, Current State: {obj.state}, New State: LocalDropped, AvId: {base.localAvatar.doId}")
                 obj.demand('LocalDropped', localAvatar.doId, self.doId)
-                
                 #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, releaseObject - object is Grabbed, obj.demand('LocalDropped', localAvatar.doId, self.doId)")
 
         if self.boss:
