@@ -120,7 +120,7 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
         avId = self.air.getAvatarIdFromSender()
         #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestDrop STARTED")
         
-        if avId == self.avId and self.state == 'Grabbed':
+        if avId == self.avId and self.state == 'Grabbed' and self.state != 'Off':
             craneId, objectId = self.__getCraneAndObject(avId)
             if craneId != 0 and objectId == self.doId:
                 self.demand('Dropped', avId, craneId)
