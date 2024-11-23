@@ -425,7 +425,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane = self.cr.doId2do.get(craneId)
         
         self.activatePhysics()
-        self.startPosHprBroadcast()
+        #self.startPosHprBroadcast()
         self.hideShadows()
 
         # Set slippery physics so it will slide off the boss.

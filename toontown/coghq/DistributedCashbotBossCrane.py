@@ -901,7 +901,25 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if obj.lerpInterval:
             obj.lerpInterval.finish()
             
-        obj.lerpInterval = Parallel(obj.posInterval(ToontownGlobals.CashbotBossToMagnetTime, Point3(*obj.grabPos)), obj.quatInterval(ToontownGlobals.CashbotBossToMagnetTime, VBase3(obj.getH(), 0, 0)), obj.toMagnetSoundInterval)
+        snapToMagnet = Parallel(
+            obj.posInterval(0.2, Point3(*obj.grabPos)),
+            obj.quatInterval(0.2, VBase3(obj.getH(), 0, 0))
+        )
+
+        adjustAfterAttach = Sequence(
+            Wait(0.2),  # Wait for the snap to complete
+            Parallel(
+                obj.posInterval(0.4, Point3(*obj.grabPos), blendType='easeOut'),
+                obj.quatInterval(0.4, VBase3(obj.getH(), 0, 0), blendType='easeOut')
+            )
+        )
+        
+        obj.lerpInterval = Parallel(
+            snapToMagnet,
+            adjustAfterAttach,
+            obj.toMagnetSoundInterval
+        )
+
         obj.lerpInterval.start()
         
         self.heldObject = obj
