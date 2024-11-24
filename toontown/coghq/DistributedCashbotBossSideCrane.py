@@ -33,6 +33,42 @@ class DistributedCashbotBossSideCrane(DistributedCashbotBossCrane.DistributedCas
     def grabObject(self, obj):
         DistributedCashbotBossCrane.DistributedCashbotBossCrane.grabObject(self, obj)
 
+    def sniffedSomething(self, entry):
+    
+        # Something was sniffed as grabbable.
+        np = entry.getIntoNodePath()
+        
+        if np.hasNetTag('object'):
+            doId = int(np.getNetTag('object'))
+        else:
+            self.notify.warning("%s missing 'object' tag" % np)
+            return
+            
+        self.notify.debug('sniffedSomething %d' % doId)
+
+        obj = base.cr.doId2do.get(doId)
+        if obj.state == 'Grabbed':
+            return
+  
+        # Spawn protection
+        if obj.state in ['EmergeA', 'EmergeB']:
+            return
+        
+        if obj and obj.state != 'LocalDropped' and (obj.state != 'Dropped' or obj.craneId != self.doId):
+            self.boss.craneStatesDebug(doId=self.doId, content='Sniffed something, held obj %s' % (
+                self.heldObject.getName() if self.heldObject else "Nothing"))
+            
+            if isinstance(obj, DistributedCashbotBossSafe.DistributedCashbotBossSafe):
+                # To-Do
+                return
+            
+            self.considerObjectState(obj)
+            obj.d_requestGrab()
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, sniffedSomething - requesting object Grab, obj.requestGrab()")
+            # See if we should do anything with this object when sniffing it
+            obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, sniffedSomething - demanding object LocalGrabbed, obj.demand(...)"), 
+
     def getPointsForStun(self):
         return self.boss.ruleset.POINTS_SIDESTUN
 

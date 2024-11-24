@@ -773,7 +773,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if not self.snifferActivated:
             self.sniffer.unstash()
             base.cTrav.addCollider(self.sniffer, self.snifferHandler)
-            self.accept(self.snifferEvent, self.__sniffedSomething)
+            self.accept(self.snifferEvent, self.sniffedSomething)
             self.startFlicker()
             self.snifferActivated = 1
 
@@ -832,7 +832,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
 
         return Task.cont
 
-    def __sniffedSomething(self, entry):
+    def sniffedSomething(self, entry):
     
         # Something was sniffed as grabbable.
         np = entry.getIntoNodePath()
@@ -843,7 +843,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.notify.warning("%s missing 'object' tag" % np)
             return
             
-        self.notify.debug('__sniffedSomething %d' % doId)
+        self.notify.debug('sniffedSomething %d' % doId)
 
         obj = base.cr.doId2do.get(doId)
         if obj.state == 'Grabbed':
@@ -859,10 +859,10 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             
             self.considerObjectState(obj)
             obj.d_requestGrab()
-            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, __sniffedSomething - requesting object Grab, obj.requestGrab()")
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, sniffedSomething - requesting object Grab, obj.requestGrab()")
             # See if we should do anything with this object when sniffing it
             obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
-            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, __sniffedSomething - demanding object LocalGrabbed, obj.demand(...)"), 
+            #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, sniffedSomething - demanding object LocalGrabbed, obj.demand(...)"), 
 
 
     def considerObjectState(self, obj):
