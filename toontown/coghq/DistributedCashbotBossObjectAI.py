@@ -120,7 +120,7 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
         avId = self.air.getAvatarIdFromSender()
         #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, requestDrop STARTED")
         
-        if avId == self.avId and self.state == 'Grabbed' and self.state != 'Off':
+        if avId == self.avId and (self.state == 'Grabbed' or self.state == 'Dragged') and self.state != 'Off':
             craneId, objectId = self.getCraneAndObject(avId)
             if craneId != 0 and objectId == self.doId:
                 self.demand('Dropped', avId, craneId)
@@ -167,7 +167,7 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
 
         return (0, 0)
 
-    def __setCraneObject(self, craneId, objectId):
+    def setCraneObject(self, craneId, objectId):
         # Marks the indicated crane as having grabbed the indicated
         # object.  An objectId of 0 indicates the crane holds nothing.
         if self.air:
@@ -183,13 +183,13 @@ class DistributedCashbotBossObjectAI(DistributedSmoothNodeAI.DistributedSmoothNo
         #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, enterGrabbed")
         self.avId = avId
         self.craneId = craneId
-        self.__setCraneObject(self.craneId, self.doId)
+        self.setCraneObject(self.craneId, self.doId)
         self.d_setObjectState('G', avId, craneId)
 
     def exitGrabbed(self):
         avId = None
         #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, exitGrabbed")
-        self.__setCraneObject(self.craneId, 0)
+        self.setCraneObject(self.craneId, 0)
 
     def enterDropped(self, avId, craneId):
         #state_logger.info(f"[Server] [AI-Object-{self.doId}], AvId-{avId}, Current State: {self.state}, enterDropped")

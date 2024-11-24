@@ -6,6 +6,7 @@ from toontown.toonbase import ToontownGlobals
 from otp.otpbase import OTPGlobals
 from . import DistributedCashbotBossObject
 import copy
+from direct.task import Task
 
 from toontown.coghq import CraneLeagueGlobals
 
@@ -170,15 +171,62 @@ class DistributedCashbotBossSafe(DistributedCashbotBossObject.DistributedCashbot
     def setObjectState(self, state, avId, craneId):
         if state == 'I':
             self.demand('Initial')
+        elif state == 'R':
+            self.demand('Dragged', avId, craneId)
         else:
             DistributedCashbotBossObject.DistributedCashbotBossObject.setObjectState(self, state, avId, craneId)
+
+    def rejectDrag(self):
+        # The server tells us we can't drag for whatever reason.
+        pass
 
     def d_requestInitial(self):
         self.sendUpdate('requestInitial')
 
-
+    def d_requestDrag(self):
+        self.sendUpdate('requestDrag')
 
     ### FSM States ###
+
+    def prepareDrag(self):
+        pass
+
+    def enterDragged(self, avId, craneId):
+        self.avId = avId
+        self.craneId = craneId
+        self.crane = self.cr.doId2do.get(craneId)
+
+        if self not in self.crane.draggedObjects:
+            self.crane.draggedObjects.append(self)
+        
+        self.hideShadows()
+        taskMgr.add(self.crane.dragObject, 'dragTask', extraArgs=[self])
+
+        if self.avId == base.localAvatar.doId:
+            self.activatePhysics()
+            self.startPosHprBroadcast(period=.05)
+
+            # Set slippery physics so it will slide off the boss.
+            self.handler.setStaticFrictionCoef(0)
+            self.handler.setDynamicFrictionCoef(0)
+        else:
+            self.startSmooth()
+
+    def exitDragged(self):
+        if self.avId == base.localAvatar.doId:
+            if self.newState != 'SlidingFloor' or self.newState != 'Dropped':
+                self.deactivatePhysics()
+                self.stopPosHprBroadcast()
+        else:
+            self.stopSmooth()
+
+        if self.crane:
+            if self in self.crane.draggedObjects:
+                self.crane.draggedObjects.remove(self)
+            self.crane.dropObject(self)
+
+        self.prepareRelease()
+        self.showShadows()
     
     def enterInitial(self):
         self.resetSpeedCaching()

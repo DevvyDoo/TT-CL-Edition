@@ -436,6 +436,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.snifferHandler = CollisionHandlerEvent()
         self.snifferHandler.addInPattern(self.snifferEvent)
         self.snifferHandler.addAgainPattern(self.snifferEvent)
+        self.snifferHandler.addOutPattern(self.snifferEvent + '-out')
         
         rope = self.makeSpline()
         rope.reparentTo(self.cable)
@@ -774,6 +775,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.sniffer.unstash()
             base.cTrav.addCollider(self.sniffer, self.snifferHandler)
             self.accept(self.snifferEvent, self.sniffedSomething)
+            self.accept(self.snifferEvent + '-out', self.sniffedNothing)
             self.startFlicker()
             self.snifferActivated = 1
 
@@ -864,6 +866,8 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
             #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, sniffedSomething - demanding object LocalGrabbed, obj.demand(...)"), 
 
+    def sniffedNothing(self, entry):
+        pass
 
     def considerObjectState(self, obj):
 
@@ -938,8 +942,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
 
     def dropObject(self, obj):
         # This is only called by DistributedCashbotBossObject.exitGrabbed().
-
-        #state_logger.info(f"[Client] [Crane-{self.doId}], AvId-{self.avId}, Current State: {self.state}, dropObject")
         
         self.boss.craneStatesDebug(doId=self.doId,
                                    content='pre-Dropping object %s, currently holding: %s' % (obj.getName(), self.heldObject.getName() if self.heldObject else "Nothing"))
@@ -952,24 +954,8 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         
         p1 = self.bottomLink.node().getPhysicsObject()
         v = render.getRelativeVector(self.bottomLink, p1.getVelocity())
-        #o = obj.physicsObject.getOrientation()
-        #mult = LQuaternionf(-1, -1, -1, -1)
-        #o.multiply(mult)
-        #obj.setH(180)
-        #if isinstance(obj, DistributedCashbotBossSafe.DistributedCashbotBossSafe):
-        #obj.copy.setH(180)
         obj.physicsObject.setVelocity(v * 1.5)
-        #obj.physicsObject.setOrientation(LOrientationf(1, 0, 0, 0))
-        
-        #print("Pre-collision:")
-        #print(obj.getH())
-        #print(obj.physicsObject.getOrientation())
-        #print("")
-        
-        # This condition is just for sake of the publish, in case we
-        # have gotten into some screwy state.  In the dev environment,
-        # we should have verified this already with the above
-        # assertion.
+
         if self.heldObject == obj:
             self.heldObject = None
             self.handler.setDynamicFrictionCoef(self.emptyFrictionCoef)
