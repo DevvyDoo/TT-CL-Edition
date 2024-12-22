@@ -340,7 +340,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
         # We're not allowed to drop the object directly from this
         # state.
-        
         self.avId = avId
         self.craneId = craneId
 
@@ -348,6 +347,11 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
         self.hideShadows()
         self.prepareGrab()
+
+        # Add this to establish local control and
+        # stop receiving incoming position updates
+        # from other players:
+        self.localControl = True 
         self.crane.grabObject(self)
 
     def exitLocalGrabbed(self):
@@ -356,6 +360,10 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
                 self.crane.dropObject(self)
             self.prepareRelease()
             del self.crane
+
+            # Add this to de-establish local control
+            self.localControl = False
+
             self.showShadows()
 
     def enterGrabbed(self, avId, craneId):
@@ -374,6 +382,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
                 # turns out someone else grabbed it instead.
                 self.crane.dropObject(self)
                 self.prepareRelease()
+                
+                # Add this to de-establish local control
+                self.localControl = False
         
         self.avId = avId
         self.craneId = craneId
@@ -392,6 +403,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.crane.dropObject(self)
         self.prepareRelease()
         self.showShadows()
+        self.localControl = False
         del self.crane
 
     def enterLocalDropped(self, avId, craneId):
@@ -420,30 +432,35 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.showShadows()
 
     def enterDropped(self, avId, craneId):
-        # Dropped (or flung) from a player's crane, or from the boss's
-        # head.  In this case, craneId is the crane we were dropped
-        # from (or the boss doId).
         self.avId = avId
         self.craneId = craneId
 
         self.crane = self.cr.doId2do.get(craneId)
-
+        
+        # If I'm the one who dropped it
+        # Then I should be the one to broadcast
+        # the position updates
         if self.avId == base.localAvatar.doId:
             self.activatePhysics()
             self.startPosHprBroadcast(period=.05)
-
-            # Set slippery physics so it will slide off the boss.
             self.handler.setStaticFrictionCoef(0)
             self.handler.setDynamicFrictionCoef(0)
+        # Otherwise, I'm the one receiving the
+        # position updates
         else:
             self.startSmooth()
         self.hideShadows()
 
     def exitDropped(self):
+        # If I'm the one who dropped it
+        # Then I should stop broadcasting
+        # the position updates
         if self.avId == base.localAvatar.doId:
             if self.newState != 'SlidingFloor':
                 self.deactivatePhysics()
                 self.stopPosHprBroadcast()
+        # Otherwise, I'm the one receiving the
+        # position updates so I should stop
         else:
             self.stopSmooth()
 
