@@ -1,3 +1,4 @@
+from enum import IntEnum
 from panda3d.core import *
 from panda3d.physics import *
 from direct.interval.IntervalGlobal import *
@@ -8,9 +9,16 @@ from toontown.toonbase import ToontownGlobals
 from otp.otpbase import OTPGlobals
 from direct.fsm import FSM
 from direct.task import Task
+from direct.task.TaskManagerGlobal import taskMgr
 import math
 import copy
 smileyDoId = 1
+
+class DummyTaskClass:
+    def setDelay(self, blah):
+        pass
+
+DummyTask = DummyTaskClass()
 
 class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, FSM.FSM):
 
@@ -64,6 +72,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         
         self.setBroadcastStateChanges(True)
         self.accept(self.getStateChangeEvent(), self._doDebug)
+        
+        self.__broadcastPeriod = None
+        self.broadcasting = False
 
     def _doDebug(self, _=None):
         pass
@@ -420,7 +431,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane = self.cr.doId2do.get(craneId)
         
         self.activatePhysics()
-        self.startPosHprBroadcast()
+        self.startPosHprBroadcast(avId=self.avId, period=.05)
         self.hideShadows()
 
         # Set slippery physics so it will slide off the boss.
@@ -445,12 +456,15 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # the position updates
         if self.avId == base.localAvatar.doId:
             self.activatePhysics()
-            self.startPosHprBroadcast(period=.05)
+            self.startPosHprBroadcast(avId=self.avId, period=.05)
             self.handler.setStaticFrictionCoef(0)
             self.handler.setDynamicFrictionCoef(0)
         # Otherwise, I'm the one receiving the
         # position updates
         else:
+            if self.broadcasting:
+                self.deactivatePhysics()
+                self.stopPosHprBroadcast()
             self.startSmooth()
         self.hideShadows()
 
@@ -483,7 +497,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             
         if self.avId == base.localAvatar.doId:
             self.activatePhysics()
-            self.startPosHprBroadcast(period=.05)
+            self.startPosHprBroadcast(avId=self.avId, period=.05)
             
             self.handler.setStaticFrictionCoef(0.9)
             self.handler.setDynamicFrictionCoef(0.5)
@@ -493,6 +507,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             if self.wantsWatchDrift:
                 taskMgr.add(self.__watchDrift, self.watchDriftName)
         else:
+            if self.broadcasting:
+                self.deactivatePhysics()
+                self.stopPosHprBroadcast()
             self.startSmooth()
             
         self.hitFloorSoundInterval.start()
@@ -512,3 +529,76 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
     def exitFree(self):
         pass
+
+    class BroadcastTypes(IntEnum):
+        FULL = 0
+        XYH = 1
+        XY = 2
+
+    def _posHprBroadcast(self, task=DummyTask):
+        # TODO: we explicitly stagger the initial task timing in
+        # startPosHprBroadcast; we should at least make an effort to keep
+        # this task accurately aligned with its period and starting time.
+        if base.localAvatar.doId == self.avId:
+            self.d_broadcastPosHpr()
+            task.setDelay(self.__broadcastPeriod)
+            return Task.again
+        else:
+            return Task.done
+
+    def setPosHprBroadcastPeriod(self, period):
+        # call this at any time to change the delay between broadcasts
+        self.__broadcastPeriod = period
+
+    def getPosHprBroadcastPeriod(self):
+        # query the current delay between broadcasts
+        return self.__broadcastPeriod
+    
+    def startPosHprBroadcast(self, avId=None, period=.2, stagger=0, type=None):
+        if self.cnode is None:
+            self.initializeCnode()
+
+        BT = self.BroadcastTypes
+        if type is None:
+            type = BT.FULL
+        # set the broadcast type
+        self.broadcastType = type
+
+        broadcastFuncs = {
+            BT.FULL: self.cnode.broadcastPosHprFull,
+            BT.XYH:  self.cnode.broadcastPosHprXyh,
+            BT.XY:  self.cnode.broadcastPosHprXy,
+            }
+        # this comment is here so it will show up in a grep for 'def d_broadcastPosHpr'
+        self.d_broadcastPosHpr = broadcastFuncs[self.broadcastType]
+
+        # Set stagger to non-zero to randomly delay the initial task execution
+        # over 'period' seconds, to spread out task processing over time
+        # when a large number of SmoothNodes are created simultaneously.
+        taskName = self.getPosHprBroadcastTaskName() + '-%s' % avId
+
+        # Set up telemetry optimization variables
+        self.cnode.initialize(self, self.dclass, self.doId)
+
+        self.setPosHprBroadcastPeriod(period)
+        # Broadcast our initial position
+        self.b_clearSmoothing()
+        self.cnode.sendEverything()
+
+        # remove any old tasks
+        taskMgr.remove(taskName)
+        # spawn the new task
+        delay = 0.
+        if stagger:
+            delay = randFloat(period)
+        if self.wantSmoothPosBroadcastTask():
+            taskMgr.doMethodLater(self.__broadcastPeriod + delay,
+                                  self._posHprBroadcast, taskName)
+        
+        self.broadcasting = True
+            
+    def stopPosHprBroadcast(self):
+        taskMgr.remove(self.getPosHprBroadcastTaskName() + '-%s' % base.localAvatar.doId)
+        # Delete this callback because it maintains a reference to self
+        self.d_broadcastPosHpr = None
+        self.broadcasting = False
