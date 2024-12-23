@@ -60,7 +60,7 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         if avId not in self.boss.involvedToons:
             return
             
-        if self.state != 'Dropped' and self.state != 'Grabbed' and self.state != 'Dragged':
+        if self.state != 'Dropped' and self.state != 'Grabbed':
             return
             
         if self.avoidHelmet or self == self.boss.heldObject:
@@ -127,18 +127,6 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
                     self.demand('Grabbed', avId, craneId)
                     return
             self.sendUpdateToAvatarId(avId, 'rejectGrab', [])
-
-    def requestDrag(self):
-        avId = self.air.getAvatarIdFromSender()
-        if self.state not in ['Grabbed', 'Off', 'Dragged']:
-            craneId, objectId = self.getCraneAndObject(avId)
-            crane = simbase.air.doId2do.get(craneId)
-            if crane:
-                if craneId != 0 and objectId == 0:
-                    self.demand('Dragged', avId, craneId)
-                    return
-            self.sendUpdateToAvatarId(avId, 'rejectDrag', [])
-        self.sendUpdateToAvatarId(avId, 'rejectDrag', [])
             
     def getCraneAndObject(self, avId):
         if self.boss and self.boss.cranes != None:
@@ -154,16 +142,6 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
     def enterGrabbed(self, avId, craneId):
         DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.enterGrabbed(self, avId, craneId)
         self.avoidHelmet = 0
-
-    def enterDragged(self, avId, craneId):
-        self.avId = avId
-        self.craneId = craneId
-        self.setCraneObject(self.craneId, self.doId)
-        self.d_setObjectState('R', avId, craneId)
-
-    def exitDragged(self):
-        avId = None
-        self.setCraneObject(self.craneId, 0)
 
     def enterInitial(self):
         # The safe is in its initial, resting position.
