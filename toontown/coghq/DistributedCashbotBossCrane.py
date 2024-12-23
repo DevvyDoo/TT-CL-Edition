@@ -431,6 +431,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.snifferHandler = CollisionHandlerEvent()
         self.snifferHandler.addInPattern(self.snifferEvent)
         self.snifferHandler.addAgainPattern(self.snifferEvent)
+        self.snifferHandler.addOutPattern(self.snifferEvent)
         
         rope = self.makeSpline()
         rope.reparentTo(self.cable)
@@ -769,6 +770,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.sniffer.unstash()
             base.cTrav.addCollider(self.sniffer, self.snifferHandler)
             self.accept(self.snifferEvent, self.sniffedSomething)
+            self.accept(self.snifferEvent + '-out', self.sniffedNothing)
             self.startFlicker()
             self.snifferActivated = 1
 
@@ -826,6 +828,9 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
                 l.show()
 
         return Task.cont
+    
+    def sniffedNothing(self, entry):
+        pass
 
     def sniffedSomething(self, entry):
     
