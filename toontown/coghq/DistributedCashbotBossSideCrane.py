@@ -37,7 +37,6 @@ class DistributedCashbotBossSideCrane(DistributedCashbotBossCrane.DistributedCas
         DistributedCashbotBossCrane.DistributedCashbotBossCrane.__init__(self, cr)
         FSM.FSM.__init__(self, 'DistributedCashbotBossSideCrane')
         self.draggedObjects = []
-        self.sniffing = False
 
     def getName(self):
         return 'SideCrane-%s' % self.index
@@ -45,7 +44,7 @@ class DistributedCashbotBossSideCrane(DistributedCashbotBossCrane.DistributedCas
     def dragObject(self, obj, task=None):
         """Continuously apply drag force while in Dragged state"""
 
-        if (self.state == 'Off' or not self.magnetOn) and not self.sniffing:
+        if self.state == 'Off' or not self.magnetOn:
             self.releaseObject(safe=obj)
             return Task.done
         
@@ -113,7 +112,6 @@ class DistributedCashbotBossSideCrane(DistributedCashbotBossCrane.DistributedCas
 
     # Override base method, drop the object when no longer sniffing
     def sniffedNothing(self, entry):
-        self.sniffing = False
         # Something was sniffed as grabbable.
         np = entry.getIntoNodePath()
         
@@ -134,7 +132,6 @@ class DistributedCashbotBossSideCrane(DistributedCashbotBossCrane.DistributedCas
     # Override base method, sniff something functions differently
     # drag safes instead of grab
     def sniffedSomething(self, entry):
-        self.sniffing = True
         # Something was sniffed as grabbable.
         np = entry.getIntoNodePath()
         

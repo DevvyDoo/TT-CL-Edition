@@ -129,7 +129,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         
         self.setBroadcastStateChanges(True)
         self.accept(self.getStateChangeEvent(), self._doDebug)
-        self.sniffing = False
 
     def _doDebug(self, _=None):
 
@@ -831,11 +830,9 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         return Task.cont
     
     def sniffedNothing(self, entry):
-        self.sniffing = False
         pass
 
     def sniffedSomething(self, entry):
-        self.sniffing = True
     
         # Something was sniffed as grabbable.
         np = entry.getIntoNodePath()
