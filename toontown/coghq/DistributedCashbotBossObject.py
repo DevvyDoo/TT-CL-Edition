@@ -279,8 +279,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             if self.state != 'LocalDropped':
                 self.demand('Grabbed', avId, craneId)
         elif state == 'D':
-            if self.state != 'Dropped':
-                self.demand('Dropped', avId, craneId)
+            self.demand('Dropped', avId, craneId)
         elif state == 's':
             if self.state != 'SlidingFloor':
                 self.demand('SlidingFloor', avId)
