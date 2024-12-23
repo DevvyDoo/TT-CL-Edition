@@ -260,6 +260,10 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.boss = base.cr.doId2do[bossCogId]
 
     def setObjectState(self, state, avId, craneId):
+
+        if self.state == 'Off':
+            return
+
         if state == 'G':
             self.demand('Grabbed', avId, craneId)
         elif state == 'D':
