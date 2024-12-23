@@ -123,12 +123,7 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         crane = simbase.air.doId2do.get(craneId)
         if crane:
             if craneId != 0 and objectId == 0:
-                # If it is a sidecrane, dont pick up the safe
-                if isinstance(crane, DistributedCashbotBossSideCraneAI):
-                    self.sendUpdateToAvatarId(avId, 'rejectGrab', [])
-                    self.demand('Dropped', avId, craneId)
-                    return
-                elif self.state != 'Grabbed' and self.state != 'Off':
+                if self.state != 'Grabbed' and self.state != 'Off':
                     self.demand('Grabbed', avId, craneId)
                     return
             self.sendUpdateToAvatarId(avId, 'rejectGrab', [])
