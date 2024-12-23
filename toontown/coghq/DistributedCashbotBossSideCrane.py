@@ -41,3 +41,35 @@ class DistributedCashbotBossSideCrane(DistributedCashbotBossCrane.DistributedCas
         if isinstance(obj, DistributedCashbotBossGoon.DistributedCashbotBossGoon):
             obj.d_requestWalk()
             obj.setObjectState('W', 0, obj.craneId)  # wake goon up
+
+    # Override base method, sniff something functions differently
+    def sniffedSomething(self, entry):
+        # Something was sniffed as grabbable.
+        np = entry.getIntoNodePath()
+        
+        if np.hasNetTag('object'):
+            doId = int(np.getNetTag('object'))
+        else:
+            self.notify.warning("%s missing 'object' tag" % np)
+            return
+            
+        self.notify.debug('sniffedSomething %d' % doId)
+        obj = base.cr.doId2do.get(doId)
+        if obj.state == 'Grabbed':
+            return
+  
+        # Spawn protection
+        if obj.state in ['EmergeA', 'EmergeB']:
+            return
+        
+        if obj and obj.state != 'LocalDropped' and (obj.state != 'Dropped' or obj.craneId != self.doId):
+            self.boss.craneStatesDebug(doId=self.doId, content='Sniffed something, held obj %s' % (
+                self.heldObject.getName() if self.heldObject else "Nothing"))
+            
+            if isinstance(obj, DistributedCashbotBossSafe.DistributedCashbotBossSafe):
+                # To-Do
+                return
+            
+            self.considerObjectState(obj)
+            obj.d_requestGrab()
+            obj.demand('LocalGrabbed', localAvatar.doId, self.doId)
