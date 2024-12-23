@@ -431,7 +431,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.snifferHandler = CollisionHandlerEvent()
         self.snifferHandler.addInPattern(self.snifferEvent)
         self.snifferHandler.addAgainPattern(self.snifferEvent)
-        self.snifferHandler.addOutPattern(self.snifferEvent)
+        self.snifferHandler.addOutPattern(self.snifferEvent + '-out')
         
         rope = self.makeSpline()
         rope.reparentTo(self.cable)
