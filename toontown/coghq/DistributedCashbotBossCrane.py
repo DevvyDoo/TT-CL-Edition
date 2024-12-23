@@ -768,7 +768,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if not self.snifferActivated:
             self.sniffer.unstash()
             base.cTrav.addCollider(self.sniffer, self.snifferHandler)
-            self.accept(self.snifferEvent, self.sniffedSomething)
+            self.accept(self.snifferEvent, self.__sniffedSomething)
             self.startFlicker()
             self.snifferActivated = 1
 
@@ -827,7 +827,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
 
         return Task.cont
 
-    def sniffedSomething(self, entry):
+    def __sniffedSomething(self, entry):
     
         # Something was sniffed as grabbable.
         np = entry.getIntoNodePath()
@@ -838,7 +838,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.notify.warning("%s missing 'object' tag" % np)
             return
             
-        self.notify.debug('sniffedSomething %d' % doId)
+        self.notify.debug('__sniffedSomething %d' % doId)
 
         obj = base.cr.doId2do.get(doId)
         if obj.state == 'Grabbed':
