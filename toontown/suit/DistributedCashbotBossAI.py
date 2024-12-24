@@ -65,6 +65,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
+        self.openingModificationsToonIndex = 0
         self.wantMaxSizeGoons = False
         self.wantLiveGoonPractice = False
         self.wantNoStunning = False

@@ -2074,7 +2074,6 @@ class safeRush(MagicWord):
             return ("Safe Rush => ON")
             
 
-
 class livegoon(MagicWord):
     desc = "Sets goon spawn rate to 4 seconds"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
@@ -2108,6 +2107,10 @@ class rng(MagicWord):
     desc = "Sets sides to always open your side, and max goon size"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
+    arguments = [
+        ("state", int, False, 1), 
+        ("toonIndex", int, False, 0)
+    ]
 
     def handleWord(self, invoker, avId, toon, *args):
         from toontown.suit.DistributedCashbotBossAI import DistributedCashbotBossAI
@@ -2120,14 +2123,18 @@ class rng(MagicWord):
 
         if not boss:
             return "You aren't in a CFO!"
+        
+        if args[1] > len(boss.involvedToons) or args[1] < 0:
+            return "Invalid toon index, please enter a valid toon index! (0-%s)" % str(len(boss.involvedToons)-1)
 
-        if boss.wantSafeRushPractice:
-            boss.wantOpeningModifications = False
-            boss.wantMaxSizeGoons = False
+        if args[0]: 
+            boss.wantOpeningModifications = True
+            boss.openingModificationsToonIndex = args[1]
+            boss.wantMaxSizeGoons = True
             return ("RNG => ON")
         else:
-            boss.wantOpeningModifications = True
-            boss.wantMaxSizeGoons = True
+            boss.wantOpeningModifications = False
+            boss.wantMaxSizeGoons = False
             return ("RNG => OFF")
 
 
