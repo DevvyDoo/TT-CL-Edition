@@ -402,7 +402,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         # (we're initially deactivated).
         anchor = self.topLink
         for linkNum in range(self.numLinks):
-            anchor = self.__makeLink(anchor, linkNum)
+            anchor = self.makeLink(anchor, linkNum)
 
         # Make the magnet swing naturally on the end of the cable.
         self.collisions.stash()
@@ -410,7 +410,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.middleLink = self.links[-2][0]
         self.magnet = self.bottomLink.attachNewNode('magnet')
         self.wiggleMagnet = self.magnet.attachNewNode('wiggleMagnet')
-        taskMgr.add(self.__rotateMagnet, self.rotateLinkName)
+        taskMgr.add(self.rotateMagnet, self.rotateLinkName)
         
         magnetModel = self.boss.magnet.copyTo(self.wiggleMagnet)
         magnetModel.setHpr(90, 45, 90)
@@ -530,7 +530,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         
         return Task.cont
 
-    def __makeLink(self, anchor, linkNum):
+    def makeLink(self, anchor, linkNum):
         an = ActorNode('link%s' % linkNum)
         anp = NodePath(an)
         
@@ -567,7 +567,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         
         return anp
 
-    def __rotateMagnet(self, task):
+    def rotateMagnet(self, task):
         # Rotate the magnet to the penultimate link, so that the
         # magnet seems to swing realistically (instead of always
         # hanging straight down).
