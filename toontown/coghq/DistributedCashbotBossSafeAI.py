@@ -87,7 +87,7 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
                 damage *= self.boss.ruleset.SAFE_CFO_DAMAGE_MULTIPLIER
                 damage = math.ceil(damage)
                 
-                self.boss.recordHit(max(damage, 2), impact, craneId)
+                self.boss.recordHit(max(damage, 2), impact, craneId, objId=self.doId)
                 
             elif self.boss.acceptHelmetFrom(avId):
                 # If he's not dizzy, he grabs the safe and makes a

@@ -475,6 +475,13 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.waitForNextAttack(delayTime)
         return
 
+    def d_setAttackCode(self, attackCode, avId=0, delayTime=0):
+        self.sendUpdate('setAttackCode', [attackCode, avId, delayTime])   
+
+    def b_setAttackCode(self, attackCode, avId=0, delayTime=0):
+        self.d_setAttackCode(attackCode, avId, delayTime=delayTime)
+        self.setAttackCode(attackCode, avId)
+
     def getDamageMultiplier(self, allowFloat=False):
         mult = self.progressValue(1, self.ruleset.CFO_ATTACKS_MULTIPLIER + (0 if allowFloat else 1))
         if not allowFloat:
@@ -821,7 +828,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
         return False
 
-    def recordHit(self, damage, impact=0, craneId=-1):
+    def recordHit(self, damage, impact=0, craneId=-1, objId=0, isGoon=False):
         avId = self.air.getAvatarIdFromSender()
         crane = simbase.air.doId2do.get(craneId)
         if not self.validate(avId, avId in self.getInvolvedToonsNotSpectating(), 'recordHit from unknown avatar'):
@@ -836,7 +843,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             print(('multiplying damage by ' + str(self.getToonOutgoingMultiplier(avId) / 100.0) + ' damage is now ' + str(damage)))
 
         # Record a successful hit in battle three.
-        self.b_setBossDamage(self.bossDamage + damage)
+        self.b_setBossDamage(self.bossDamage + damage, avId=avId, objId=objId, isGoon=isGoon)
 
         # Award bonus points for hits with maximum impact
         if impact == 1.0:
@@ -868,7 +875,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         if hitMeetsStunRequirements:
             # A particularly good hit (when he's not already
             # dizzy) will make the boss dizzy for a little while.
-            self.b_setAttackCode(ToontownGlobals.BossCogDizzy)
+            delayTime = self.progressValue(20, 5)
+            self.b_setAttackCode(ToontownGlobals.BossCogDizzy, delayTime=delayTime)
             self.d_updateStunCount(avId, craneId)
         else:
 
@@ -881,16 +889,16 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         if self.ruleset.WANT_MOMENTUM_MECHANIC:
             self.increaseToonOutgoingMultiplier(avId, damage)
 
-    def b_setBossDamage(self, bossDamage):
-        self.d_setBossDamage(bossDamage)
+    def b_setBossDamage(self, bossDamage, avId=0, objId=0, isGoon=False):
+        self.d_setBossDamage(bossDamage, avId=avId, objId=objId, isGoon=isGoon)
         self.setBossDamage(bossDamage)
 
     def setBossDamage(self, bossDamage):
         self.reportToonHealth()
         self.bossDamage = bossDamage
 
-    def d_setBossDamage(self, bossDamage):
-        self.sendUpdate('setBossDamage', [bossDamage])
+    def d_setBossDamage(self, bossDamage, avId=0, objId=0, isGoon=False):
+        self.sendUpdate('setBossDamage', [bossDamage, avId, objId, isGoon])
 
     def d_killingBlowDealt(self, avId):
         self.sendUpdate('killingBlowDealt', [avId])

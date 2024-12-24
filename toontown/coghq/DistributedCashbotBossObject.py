@@ -215,10 +215,39 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.doHitBoss(impact, self.craneId)
             self.resetSpeedCaching()
 
+    def showTempHitEffect(self, impact, craneId):
+
+        # First check if we should show damage at all
+        if self.boss.heldObject or self.boss.attackCode != ToontownGlobals.BossCogDizzy:
+            return
+        
+        timeUntilStunEnd = self.boss.stunEndTime - globalClock.getFrameTime()
+        if timeUntilStunEnd < 0.5:
+            return
+        
+        self.boss.myHits.append(self.doId)
+
+        # Get the crane to check its damage multiplier 
+        crane = self.cr.doId2do.get(craneId)
+        if not crane:
+            return
+
+        damage = int(impact * 50)
+        damage *= crane.getDamageMultiplier()
+        damage *= self.boss.ruleset.SAFE_CFO_DAMAGE_MULTIPLIER
+            
+        damage = math.ceil(damage)
+
+        self.boss.flashRed()
+        if self.boss.ruleset.CFO_FLINCHES_ON_HIT:
+            self.boss.doAnimate('hit', now=1)
+        self.boss.showHpText(-damage, scale=5)
+
     def doHitBoss(self, impact, craneId):
         # Derived classes can override this to do something specific
         # when we successfully hit the boss.
         self.d_hitBoss(impact, craneId)
+        self.showTempHitEffect(impact, craneId)
 
     def __hitDropPlane(self, entry):
         self.notify.info('%s fell out of the world.' % self.doId)

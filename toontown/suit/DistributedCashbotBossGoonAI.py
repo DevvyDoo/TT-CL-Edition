@@ -322,7 +322,7 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
                 damage *= crane.getDamageMultiplier()
                 damage *= self.boss.ruleset.GOON_CFO_DAMAGE_MULTIPLIER
                 damage = math.ceil(damage)
-                self.boss.recordHit(max(damage, 2), impact, craneId)
+                self.boss.recordHit(max(damage, 2), impact, craneId, isGoon=True)
         self.b_destroyGoon()
 
     def d_setTarget(self, x, y, h, arrivalTime):

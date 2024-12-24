@@ -76,6 +76,8 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.activityLog = ActivityLog()
 
         self.toonSpawnpointOrder = [i for i in range(8)]
+        self.stunEndTime = 0
+        self.myHits = []
         return
 
     def setToonSpawnpoints(self, order):
@@ -988,16 +990,22 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.heldObject = None
         return
 
-    def setBossDamage(self, bossDamage):
-        if bossDamage > self.bossDamage:
-            delta = bossDamage - self.bossDamage
-            self.flashRed()
+    def setBossDamage(self, bossDamage, avId=0, objId=0, isGoon=False):
 
-            # Animate the hit if the CFO should flinch
-            if self.ruleset.CFO_FLINCHES_ON_HIT:
-                self.doAnimate('hit', now=1)
+        if avId != base.localAvatar.doId or isGoon or (objId not in self.myHits):
+            if bossDamage > self.bossDamage:
+                delta = bossDamage - self.bossDamage
+                self.flashRed()
 
-            self.showHpText(-delta, scale=5)
+                # Animate the hit if the CFO should flinch
+                if self.ruleset.CFO_FLINCHES_ON_HIT:
+                    self.doAnimate('hit', now=1)
+
+                self.showHpText(-delta, scale=5)
+
+        if objId in self.myHits:
+            self.myHits.remove(objId)
+    
         self.bossDamage = bossDamage
         self.updateHealthBar()
         self.bossHealthBar.update(self.ruleset.CFO_MAX_HP - bossDamage, self.ruleset.CFO_MAX_HP)
@@ -1316,11 +1324,17 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         seq.start()
         self.storeInterval(seq, intervalName)
 
-    def setAttackCode(self, attackCode, avId = 0):
+    def setAttackCode(self, attackCode, avId = 0, delayTime=0):
         DistributedBossCog.DistributedBossCog.setAttackCode(self, attackCode, avId)
+
         if attackCode == ToontownGlobals.BossCogAreaAttack:
             self.saySomething(TTLocalizer.CashbotBossAreaAttackTaunt)
             base.playSfx(self.warningSfx)
+
+        if attackCode in (ToontownGlobals.BossCogDizzy, ToontownGlobals.BossCogDizzyNow):
+            self.stunEndTime = globalClock.getFrameTime() + delayTime
+        else:
+            self.stunEndTime = 0
 
     def exitBattleThree(self):
         DistributedBossCog.DistributedBossCog.exitBattleThree(self)
@@ -1638,3 +1652,9 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                 Func(lambda: sub.cleanup())
             ),
         ).start()
+
+    def getDamageMultiplier(self, allowFloat=False):
+        mult = self.progressValue(1, self.ruleset.CFO_ATTACKS_MULTIPLIER + (0 if allowFloat else 1))
+        if not allowFloat:
+            mult = int(mult)
+        return mult
