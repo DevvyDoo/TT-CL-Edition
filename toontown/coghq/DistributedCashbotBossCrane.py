@@ -1005,6 +1005,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.sendUpdate('requestControl')
 
     def d_requestFree(self):
+        self.demand('LocalFree')
         self.sendUpdate('requestFree')
 
     ### Handle smoothing of distributed updates.  This is similar to
@@ -1177,15 +1178,18 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
     ### FSM States ###
     
     def enterOff(self):
+        print('enterOff')
         self.clearCable()
         self.root.detachNode()
 
     def exitOff(self):
+        print('exitOff')
         if self.boss:
             self.setupCable()
         self.root.reparentTo(render)
 
     def enterLocalControlled(self, avId):
+        print('enterLocalControlled')
         self.avId = avId
         toon = base.cr.doId2do.get(avId)
         if not toon:
@@ -1225,9 +1229,46 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
 
     def exitLocalControlled(self):
-        pass
+        print('exitLocalControlled')
+        if self.newState == 'LocalFree':
+            # The local toon is no longer in control of the crane.
+            if self.grabTrack:
+                self.grabTrack.finish()
+                del self.grabTrack
+
+            if self.toon and not self.toon.isDisabled():
+                self.toon.loop('neutral')
+                self.toon.startSmooth()
+            self.stopWatchJoystick()
+
+            self.__disableControlInterface()
+            self.__deactivatePhysics()
+            self.tube.unstash()
+
+            self.stopShadow()
+            self.stopSmooth()
+            
+            localAvatar.orbitalCamera.start()
+            
+            # This is a bit hacky.  Go back to finalBattle mode, but
+            # only if we're still in crane mode.  (We might have been
+            # zapped to 'ouch' mode by a hit.)
+            if self.cr:
+                place = self.cr.playGame.getPlace()
+                if place and hasattr(place, 'fsm'):
+                    if place.fsm.getCurrentState().getName() == 'crane':
+                        place.setState('finalBattle')
+                        
+            self.boss.toFinalBattleMode()
+
+            # Go back to the defined setting for FOV effects
+            base.WANT_FOV_EFFECTS = base.settings.get('fovEffects')
+            
+            self.__straightenCable()
 
     def enterControlled(self, avId):
+        print('enterControlled')
+
         if avId != localAvatar.doId:
             if self.oldState == 'LocalControlled':
                 # The local toon is no longer in control of the crane.
@@ -1279,45 +1320,49 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.startPosHprBroadcast()
 
     def exitControlled(self):
-        self.ignore('exitCrane')
-        
-        self.grabTrack.finish()
-        del self.grabTrack
-        
-        if self.toon and not self.toon.isDisabled():
-            self.toon.loop('neutral')
-            self.toon.startSmooth()
-        self.stopWatchJoystick()
-        
-        self.stopPosHprBroadcast()
-        self.stopShadow()
-        self.stopSmooth()
-        
-        if self.avId == localAvatar.doId:
-            # The local toon is no longer in control of the crane.
-            self.__disableControlInterface()
-            self.__deactivatePhysics()
-            self.tube.unstash()
-            
-            localAvatar.orbitalCamera.start()
-            
-            # This is a bit hacky.  Go back to finalBattle mode, but
-            # only if we're still in crane mode.  (We might have been
-            # zapped to 'ouch' mode by a hit.)
-            if self.cr:
-                place = self.cr.playGame.getPlace()
-                if place and hasattr(place, 'fsm'):
-                    if place.fsm.getCurrentState().getName() == 'crane':
-                        place.setState('finalBattle')
-                        
-            self.boss.toFinalBattleMode()
+        print('exitControlled')
 
-            # Go back to the defined setting for FOV effects
-            base.WANT_FOV_EFFECTS = base.settings.get('fovEffects')
+        if self.avId != localAvatar.doId or self.newState == 'LocalFree':
+            self.ignore('exitCrane')
             
-        self.__straightenCable()
+            self.grabTrack.finish()
+            del self.grabTrack
+            
+            if self.toon and not self.toon.isDisabled():
+                self.toon.loop('neutral')
+                self.toon.startSmooth()
+            self.stopWatchJoystick()
+            
+            self.stopPosHprBroadcast()
+            self.stopShadow()
+            self.stopSmooth()
+            
+            if self.avId == localAvatar.doId:
+                # The local toon is no longer in control of the crane.
+                self.__disableControlInterface()
+                self.__deactivatePhysics()
+                self.tube.unstash()
+                
+                localAvatar.orbitalCamera.start()
+                
+                # This is a bit hacky.  Go back to finalBattle mode, but
+                # only if we're still in crane mode.  (We might have been
+                # zapped to 'ouch' mode by a hit.)
+                if self.cr:
+                    place = self.cr.playGame.getPlace()
+                    if place and hasattr(place, 'fsm'):
+                        if place.fsm.getCurrentState().getName() == 'crane':
+                            place.setState('finalBattle')
+                            
+                self.boss.toFinalBattleMode()
 
-    def enterFree(self):
+                # Go back to the defined setting for FOV effects
+                base.WANT_FOV_EFFECTS = base.settings.get('fovEffects')
+                
+            self.__straightenCable()
+
+    def enterLocalFree(self):
+        print('enterLocalFree')
         if self.fadeTrack:
             self.fadeTrack.finish()
             self.fadeTrack = None
@@ -1327,24 +1372,39 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         # timeout).
         self.restoreScaleTrack = Sequence(Wait(6), self.getRestoreScaleInterval())
         self.restoreScaleTrack.start()
-        
-        if self.avId == localAvatar.doId:
-            # Five second timeout on grabbing the same crane again.  Go
-            # get a different crane!
-            self.controlModel.setAlphaScale(0.3)
-            self.controlModel.setTransparency(1)
-            taskMgr.doMethodLater(5, self.__allowDetect, self.triggerName)
+
+        self.controlModel.setAlphaScale(0.3)
+        self.controlModel.setTransparency(1)
+        taskMgr.doMethodLater(5, self.__allowDetect, self.triggerName)
             
-            self.fadeTrack = Sequence(Func(self.controlModel.setTransparency, 1), self.controlModel.colorScaleInterval(0.2, VBase4(1, 1, 1, 0.3)))
-            self.fadeTrack.start()
-        else:
+        self.fadeTrack = Sequence(Func(self.controlModel.setTransparency, 1), self.controlModel.colorScaleInterval(0.2, VBase4(1, 1, 1, 0.3)))
+        self.fadeTrack.start()
+        return
+
+    def exitLocalFree(self):
+        print('exitLocalFree')
+        return
+
+    def enterFree(self):
+        print('enterFree')
+        if self.avId != localAvatar.doId:
+            if self.fadeTrack:
+                self.fadeTrack.finish()
+                self.fadeTrack = None
+
+            # Wait a few seconds before neutralizing the scale; maybe the
+            # same avatar wants to come right back (after his 5-second
+            # timeout).
+            self.restoreScaleTrack = Sequence(Wait(6), self.getRestoreScaleInterval())
+            self.restoreScaleTrack.start()
+                
             # Other players can grab this crane immediately.
             self.trigger.unstash()
             self.accept(self.triggerEvent, self.__hitTrigger)
-            
-        avLeaving = self.avId
-        self.avId = 0
-        messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
+                
+            avLeaving = self.avId
+            self.avId = 0
+            messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
         return
 
     def __allowDetect(self, task):
@@ -1356,6 +1416,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.accept(self.triggerEvent, self.__hitTrigger)
 
     def exitFree(self):
+        print('exitFree')
         if self.fadeTrack:
             self.fadeTrack.finish()
             self.fadeTrack = None
@@ -1372,6 +1433,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         return
 
     def enterMovie(self):
+        print('enterMovie')
         # This is used to enable a movie mode (particularly for
         # playing the cutscene showing the resistance toon using the
         # crane).  In this mode, lerps on the crane will apply physics
@@ -1380,6 +1442,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.__activatePhysics()
 
     def exitMovie(self):
+        print('exitMovie')
         self.__deactivatePhysics()
         self.__straightenCable()
 
