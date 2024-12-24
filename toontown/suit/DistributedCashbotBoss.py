@@ -835,6 +835,41 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                     track.append(toon.posHprInterval(0.2, pos, hpr))
 
         return track
+    
+    def setToonsToBattleThreePos(self, toons):
+        """
+        Places each toon at the desired position and orientation without creating 
+        or returning any animation tracks. The position and orientation are 
+        applied immediately.
+        """
+        if self.wantCustomCraneSpawns:
+            for toonId in toons:
+                toon = base.cr.doId2do.get(toonId)
+                if toon:
+                    try:
+                        # Use the stored custom position for this toon
+                        toonWantedPosition = self.customSpawnPositions[toonId]
+                    except KeyError:
+                        # Or pick a random spot if it doesn't exist
+                        toonWantedPosition = random.randrange(0, 7)
+                    
+                    # Retrieve the position/HPR from the global constants
+                    posHpr = CraneLeagueGlobals.TOON_SPAWN_POSITIONS[toonWantedPosition]
+                    pos = Point3(*posHpr[0:3])
+                    hpr = VBase3(*posHpr[3:6])
+                    
+                    # Instantly set the toon’s position/orientation
+                    toon.setPosHpr(pos, hpr)
+        else:
+            # Otherwise, use the pre-defined spawn-point order
+            for i in range(len(toons)):
+                toon = base.cr.doId2do.get(toons[i])
+                if toon:
+                    spawn_index = self.toonSpawnpointOrder[i]
+                    posHpr = CraneLeagueGlobals.TOON_SPAWN_POSITIONS[spawn_index]
+                    pos = Point3(*posHpr[0:3])
+                    hpr = VBase3(*posHpr[3:6])
+                    toon.setPosHpr(pos, hpr)
 
     def makeBossFleeMovie(self):
         # Generate an interval which shows the boss giving up and
@@ -1218,6 +1253,9 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.reparentTo(render)
         
         self.setPosHpr(*ToontownGlobals.CashbotBossBattleThreePosHpr)
+
+        if self.oldState == 'BattleThree':
+            self.setToonsToBattleThreePos(self.getInvolvedToonsNotSpectating())
         
         self.happy = 1
         self.raised = 1
