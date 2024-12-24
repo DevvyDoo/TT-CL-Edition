@@ -1240,11 +1240,6 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         taskMgr.remove(self.uniqueName('physics'))
 
     def enterBattleThree(self):
-        # synchronize latency
-        # base.cr.timeManager.synchronize('cfo')
-        # print( "Latency = %0.3f " % base.cr.timeManager.getLatency())
-        # self.latency = min(base.cr.timeManager.getLatency() + 0.1, 0.5)
-        # self.latency = 0.2
 
         if self.bossHealthBar:
             self.bossHealthBar.cleanup()
@@ -1255,11 +1250,11 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.clearChat()
         self.resistanceToon.clearChat()
         self.reparentTo(render)
-        
-        self.setPosHpr(*ToontownGlobals.CashbotBossBattleThreePosHpr)
 
         if self.oldState == 'BattleThree':
             self.setToonsToBattleThreePos(self.getInvolvedToonsNotSpectating())
+        
+        self.setPosHpr(*ToontownGlobals.CashbotBossBattleThreePosHpr)
         
         self.happy = 1
         self.raised = 1
