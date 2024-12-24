@@ -1420,9 +1420,10 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         if self.fadeTrack:
             self.fadeTrack.finish()
             self.fadeTrack = None
-            
-        self.restoreScaleTrack.pause() # We just pause, to leave it where it is.
-        del self.restoreScaleTrack
+        
+        if hasattr(self, 'restoreScaleTrack'):
+            self.restoreScaleTrack.pause() # We just pause, to leave it where it is.
+            del self.restoreScaleTrack
         
         taskMgr.remove(self.triggerName)
         self.controlModel.clearColorScale()
