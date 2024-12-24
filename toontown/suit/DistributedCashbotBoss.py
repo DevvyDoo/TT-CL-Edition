@@ -76,6 +76,9 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.activityLog = ActivityLog()
 
         self.toonSpawnpointOrder = [i for i in range(8)]
+
+        # Track pending hits as tuples of (damage, impact, craneId)
+        self.localHitsPending = set()
         return
 
     def setToonSpawnpoints(self, order):
@@ -983,17 +986,70 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         
         self.heldObject = None
         return
+    
+    def getDamageMultiplier(self, allowFloat=False):
+        mult = self.progressValue(1, self.ruleset.CFO_ATTACKS_MULTIPLIER + (0 if allowFloat else 1))
+        if not allowFloat:
+            mult = int(mult)
+        return mult
+    
+    def showTempHitEffect(self, impact, craneId, isGoon=False, scale=0):
+        # First check if we should show damage at all
+        if not isGoon:  # For safes
+            if self.heldObject or self.attackCode != ToontownGlobals.BossCogDizzy:
+                return
+        else:  # For goons
+            if self.heldObject:
+                return
+        
+        # Get the crane to check its damage multiplier 
+        crane = self.cr.doId2do.get(craneId)
+        if not crane:
+            return
+            
+        # Calculate approximate damage based on same formula as server
+        if isGoon and scale:
+            # Goon damage calculation
+            damage = int(impact * 25 * scale * 0.8)  # We need to get the goon's scale somehow
+            damage *= crane.getDamageMultiplier()
+            damage *= self.ruleset.GOON_CFO_DAMAGE_MULTIPLIER
+        else:
+            # Safe damage calculation
+            damage = int(impact * 50)
+            damage *= crane.getDamageMultiplier()
+            damage *= self.ruleset.SAFE_CFO_DAMAGE_MULTIPLIER
+            
+        damage = math.ceil(damage)
+
+        # Store hit info as pending
+        self.localHitsPending.add((damage, impact, craneId))
+            
+        self.flashRed()
+        self.lastLocalHitTime = globalClock.getFrameTime()  # Record when we showed feedback
+        if self.ruleset.CFO_FLINCHES_ON_HIT:
+            self.doAnimate('hit', now=1)
+        self.showHpText(-damage, scale=5)
 
     def setBossDamage(self, bossDamage):
         if bossDamage > self.bossDamage:
             delta = bossDamage - self.bossDamage
-            self.flashRed()
+            
+            # Look for this exact hit in our pending local hits
+            hit_found = False
+            for hit in list(self.localHitsPending):
+                damage, impact, craneId = hit
+                if damage == delta:
+                    self.localHitsPending.remove(hit)
+                    hit_found = True
+                    break
+                    
+            if not hit_found:
+                # This hit was from another player, show feedback
+                self.flashRed()
+                if self.ruleset.CFO_FLINCHES_ON_HIT:
+                    self.doAnimate('hit', now=1)
+                self.showHpText(-delta, scale=5)
 
-            # Animate the hit if the CFO should flinch
-            if self.ruleset.CFO_FLINCHES_ON_HIT:
-                self.doAnimate('hit', now=1)
-
-            self.showHpText(-delta, scale=5)
         self.bossDamage = bossDamage
         self.updateHealthBar()
         self.bossHealthBar.update(self.ruleset.CFO_MAX_HP - bossDamage, self.ruleset.CFO_MAX_HP)

@@ -219,6 +219,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # Derived classes can override this to do something specific
         # when we successfully hit the boss.
         self.d_hitBoss(impact, craneId)
+        self.boss.showTempHitEffect(impact, self.craneId)
 
     def __hitDropPlane(self, entry):
         self.notify.info('%s fell out of the world.' % self.doId)

@@ -1329,3 +1329,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
     def exitMovie(self):
         self.__deactivatePhysics()
         self.__straightenCable()
+
+    def getDamageMultiplier(self):
+        return 1.0

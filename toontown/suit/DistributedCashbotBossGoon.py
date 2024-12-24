@@ -108,6 +108,7 @@ class DistributedCashbotBossGoon(DistributedGoon.DistributedGoon, DistributedCas
 
     def doHitBoss(self, impact, craneId):
         self.d_hitBoss(impact, craneId)
+        self.boss.showTempHitEffect(impact, self.craneId, isGoon=isinstance(self, DistributedCashbotBossGoon), scale=self.scale)
 
         if impact >= self.getMinImpact():
             self.b_destroyGoon()
