@@ -1751,7 +1751,7 @@ class rcr(MagicWord):
         boss.clearObjectSpeedCaching()
         battle = battle.lower()
         boss.exitIntroduction()
-        boss.b_setState('PrepareBattleThree')
+        #boss.b_setState('PrepareBattleThree')
         boss.b_setState('BattleThree')
         
         return "Restarting Crane Round"

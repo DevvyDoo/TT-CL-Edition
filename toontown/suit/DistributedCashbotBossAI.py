@@ -988,9 +988,6 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
     ##### BattleThree state #####
     def enterBattleThree(self):
-        self.setupRuleset()
-        self.setupSpawnpoints()
-
         # Force unstun the CFO if he was stunned in a previous Battle Three round
         if self.attackCode == ToontownGlobals.BossCogDizzy or self.attackCode == ToontownGlobals.BossCogDizzyNow:
             self.b_setAttackCode(ToontownGlobals.BossCogNoAttack)
@@ -998,10 +995,14 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         # It's important to set our position correctly even on the AI,
         # so the goons can orient to the center of the room.
         self.setPosHpr(*ToontownGlobals.CashbotBossBattleThreePosHpr)
-
+        
         # Just in case we didn't pass through PrepareBattleThree state.
+        self.setupRuleset()
+        self.setupSpawnpoints()
+        self.resetBattles()
         self.__makeBattleThreeObjects()
         self.__resetBattleThreeObjects()
+        self.d_updateSpectators()
 
         self.reportToonHealth()
 
@@ -1014,8 +1015,6 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
         self.b_setBossDamage(0)
         self.battleThreeStart = globalClock.getFrameTime()
-
-        self.resetBattles()
         self.waitForNextAttack(15)
         self.waitForNextHelmet()
 
