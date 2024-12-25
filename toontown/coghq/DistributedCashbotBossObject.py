@@ -225,7 +225,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             return
         
         timeUntilStunEnd = self.boss.stunEndTime - globalClock.getFrameTime()
-        if timeUntilStunEnd < 0.5:
+        if timeUntilStunEnd < 1.5:
             return
         
         self.boss.myHits.append(self.doId)
