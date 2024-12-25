@@ -408,6 +408,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # Add this to establish local control and
         # stop receiving incoming position updates
         # from other players:
+        self.stopSmooth()
         self.localControl = True 
         self.crane.grabObject(self)
 
