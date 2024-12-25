@@ -420,9 +420,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             del self.crane
 
             self.showShadows()
-        elif self.newState == 'Grabbed':
-        # Add this to de-establish local control
-            self.localControl = False
 
     def enterGrabbed(self, avId, craneId):
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
