@@ -75,6 +75,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         
         self.__broadcastPeriod = None
         self.broadcasting = False
+        self.pendingGrab = False
+        self.pendingDrop = False
+        self.cancelDrop = False
 
     def _doDebug(self, _=None):
         pass
@@ -327,6 +330,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
     def d_requestGrab(self):
         self.sendUpdate('requestGrab')
+        self.pendingGrab = True
 
     def rejectGrab(self):
         # The server tells us we can't have it for whatever reason.
@@ -335,6 +339,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
     def d_requestDrop(self):
         self.sendUpdate('requestDrop')
+        self.pendingDrop = True
 
     def d_hitFloor(self):
         self.sendUpdate('hitFloor')
@@ -413,6 +418,11 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
         # the doId of the crane or the doId of the boss himself.
 
+        if (self.oldState == 'SlidingFloor' or self.oldState == 'Free') and self.pendingGrab and self.craneId != self.boss.doId:
+            self.pendingGrab = False
+            self.cancelDrop = True
+            return
+
         if self.oldState == 'LocalGrabbed':
             if craneId == self.craneId:
                 # This is just the confirmation from the AI that we
@@ -442,12 +452,14 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane.grabObject(self)
 
     def exitGrabbed(self):
-        if self.crane:
-            self.crane.dropObject(self)
+        if hasattr(self, 'crane'):
+            if self.crane:
+                self.crane.dropObject(self)
         self.prepareRelease()
         self.showShadows()
         self.localControl = False
-        del self.crane
+        if hasattr(self, 'crane'):
+            del self.crane
 
     def enterLocalDropped(self, avId, craneId):
         # As in LocalGrabbed, above, this state is entered locally
@@ -475,6 +487,12 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.showShadows()
 
     def enterDropped(self, avId, craneId):
+
+        if self.pendingDrop and self.craneId != self.boss.doId and self.cancelDrop:
+            self.pendingDrop = False
+            self.cancelDrop = False
+            return
+        
         self.avId = avId
         self.craneId = craneId
 
@@ -510,7 +528,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         else:
             self.stopSmooth()
 
-        del self.crane
+        if hasattr(self, 'crane'):
+            del self.crane
         self.showShadows()
 
     def enterSlidingFloor(self, avId):
