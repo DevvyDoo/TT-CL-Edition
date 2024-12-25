@@ -132,6 +132,9 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.setBroadcastStateChanges(True)
         self.accept(self.getStateChangeEvent(), self._doDebug)
 
+        self.pendingControl = False
+        self.pendingFree = False
+
     def _doDebug(self, _=None):
 
         if not self.boss:
@@ -1015,9 +1018,11 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
 
     def d_requestControl(self):
         self.sendUpdate('requestControl')
+        self.pendingControl = True
 
     def d_requestFree(self):
         self.sendUpdate('requestFree')
+        self.pendingFree = True
 
     ### Handle smoothing of distributed updates.  This is similar to
     ### code in DistributedSmoothNode, but streamlined for our
@@ -1198,6 +1203,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.root.reparentTo(render)
 
     def enterLocalControlled(self, avId):
+        print("enterLocalControlled")
         self.avId = avId
         toon = base.cr.doId2do.get(avId)
         if not toon:
@@ -1237,6 +1243,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
 
     def exitLocalControlled(self):
+        print("exitLocalControlled")
         if self.newState == 'LocalFree':
             self.ignore('exitCrane')
             
@@ -1279,6 +1286,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         pass
 
     def enterControlled(self, avId):
+        print("enterControlled")
         if avId != localAvatar.doId:
             if self.oldState == 'LocalControlled':
                 # The local toon is no longer in control of the crane.
@@ -1325,12 +1333,13 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.grabTrack = Sequence(self.grabTrack, Func(toon.startSmooth))
             self.grabTrack.start()
             messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
-        elif avId == localAvatar.doId:
+        elif avId == localAvatar.doId and self.pendingControl:
             localAvatar.sendCurrentPosition()
             self.startPosHprBroadcast()
 
     def exitControlled(self):
-        if self.locallyExited:
+        print("exitControlled")
+        if self.locallyExited and self.avId == localAvatar.doId:
             self.locallyExited = False
             return
         
@@ -1374,6 +1383,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.__straightenCable()
 
     def enterLocalFree(self):
+        print("enterLocalFree")
         if self.fadeTrack:
             self.fadeTrack.finish()
             self.fadeTrack = None
@@ -1395,12 +1405,32 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             
         avLeaving = self.avId
         messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
+        self.pendingControl = False
         return
     
     def exitLocalFree(self):
-        pass
+        print("exitLocalFree")
+        if self.newState == 'Controlled':
+            # Cancel the restore scale track
+            if hasattr(self, 'restoreScaleTrack'):
+                self.restoreScaleTrack.finish()
+                self.restoreScaleTrack = None
+                
+            # Remove the detection delay task
+            taskMgr.remove(self.triggerName)
+            
+            # Cancel the fade effect
+            if self.fadeTrack:
+                self.fadeTrack.finish()
+                self.fadeTrack = None
+                
+            # Reset the control model's appearance
+            self.controlModel.clearColorScale()
+            self.controlModel.clearTransparency()
 
     def enterFree(self):
+        print("enterFree")
+        print(self.avId, localAvatar.doId)
         if self.avId != localAvatar.doId:
             if self.fadeTrack:
                 self.fadeTrack.finish()
@@ -1453,6 +1483,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.accept(self.triggerEvent, self.__hitTrigger)
 
     def exitFree(self):
+        print("exitFree")
         if self.fadeTrack:
             self.fadeTrack.finish()
             self.fadeTrack = None
