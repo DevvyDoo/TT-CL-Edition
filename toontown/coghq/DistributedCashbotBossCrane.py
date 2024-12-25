@@ -583,9 +583,9 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.closeButton = DirectButton(image=(gui.find('**/CloseBtn_UP'),
          gui.find('**/CloseBtn_DN'),
          gui.find('**/CloseBtn_Rllvr'),
-         gui.find('**/CloseBtn_UP')), relief=None, scale=2, text=TTLocalizer.CashbotCraneLeave, text_scale=0.04, text_pos=(0, -0.07), text_fg=VBase4(1, 1, 1, 1), pos=(1.05, 0, -0.82), command=self.__exitCrane)
+         gui.find('**/CloseBtn_UP')), relief=None, scale=2, text=TTLocalizer.CashbotCraneLeave, text_scale=0.04, text_pos=(0, -0.07), text_fg=VBase4(1, 1, 1, 1), pos=(1.05, 0, -0.82), command=self.__leaveCrane)
         
-        self.accept('escape', self.__exitCrane)
+        self.accept('escape', self.__leaveCrane)
         
         self.accept(base.controls.CRANE_GRAB_KEY, self.__controlPressed)
         self.accept(base.controls.CRANE_GRAB_KEY + '-up', self.__controlReleased)
@@ -674,6 +674,16 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.closeButton = DirectLabel(relief=None, text=TTLocalizer.CashbotCraneLeaving, pos=(1.05, 0, -0.88), text_pos=(0, 0), text_scale=0.06, text_fg=VBase4(1, 1, 1, 1))
         self.__cleanupCraneAdvice()
         self.__cleanupMagnetAdvice()
+        self.d_requestFree()
+        return
+
+    def __leaveCrane(self):
+        if self.closeButton:
+            self.closeButton.destroy()
+            self.closeButton = DirectLabel(relief=None, text=TTLocalizer.CashbotCraneLeaving, pos=(1.05, 0, -0.88), text_pos=(0, 0), text_scale=0.06, text_fg=VBase4(1, 1, 1, 1))
+        self.__cleanupCraneAdvice()
+        self.__cleanupMagnetAdvice()
+        self.demand('LocalFree')
         self.d_requestFree()
         return
 
@@ -1008,7 +1018,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
 
     def d_requestFree(self):
         self.sendUpdate('requestFree')
-        self.demand('LocalFree')
 
     ### Handle smoothing of distributed updates.  This is similar to
     ### code in DistributedSmoothNode, but streamlined for our
@@ -1407,6 +1416,29 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.trigger.unstash()
             self.accept(self.triggerEvent, self.__hitTrigger)
                 
+            avLeaving = self.avId
+            self.avId = 0
+            messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
+        elif self.avId == localAvatar.doId and not self.locallyExited:
+            if self.fadeTrack:
+                self.fadeTrack.finish()
+                self.fadeTrack = None
+
+            # Wait a few seconds before neutralizing the scale; maybe the
+            # same avatar wants to come right back (after his 5-second
+            # timeout).
+            self.restoreScaleTrack = Sequence(Wait(6), self.getRestoreScaleInterval())
+            self.restoreScaleTrack.start()
+
+            # Five second timeout on grabbing the same crane again.  Go
+            # get a different crane!
+            self.controlModel.setAlphaScale(0.3)
+            self.controlModel.setTransparency(1)
+            taskMgr.doMethodLater(5, self.__allowDetect, self.triggerName)
+                
+            self.fadeTrack = Sequence(Func(self.controlModel.setTransparency, 1), self.controlModel.colorScaleInterval(0.2, VBase4(1, 1, 1, 0.3)))
+            self.fadeTrack.start()
+            
             avLeaving = self.avId
             self.avId = 0
             messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
