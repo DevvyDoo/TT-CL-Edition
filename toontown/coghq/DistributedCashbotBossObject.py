@@ -227,8 +227,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         timeUntilStunEnd = self.boss.stunEndTime - globalClock.getFrameTime()
         if timeUntilStunEnd < 1.5:
             return
-        
-        self.boss.myHits.append(self.doId)
 
         # Get the crane to check its damage multiplier 
         crane = self.cr.doId2do.get(craneId)
@@ -241,10 +239,21 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             
         damage = math.ceil(damage)
 
-        self.boss.flashRed()
-        if self.boss.ruleset.CFO_FLINCHES_ON_HIT:
-            self.boss.doAnimate('hit', now=1)
-        self.boss.showHpText(-damage, scale=5)
+
+        if self.boss.processingHp:
+            curHp = self.boss.tempHp
+        else:
+            curHp = self.boss.ruleset.CFO_MAX_HP - self.boss.bossDamage
+        
+        self.boss.tempHp = curHp - damage
+
+        if damage < curHp:
+            self.boss.myHits.append(self.doId)
+            self.boss.processingHp = True
+            self.boss.flashRed()
+            if self.boss.ruleset.CFO_FLINCHES_ON_HIT:
+                self.boss.doAnimate('hit', now=1)
+            self.boss.showHpText(-damage, scale=5)
 
     def doHitBoss(self, impact, craneId):
         # Derived classes can override this to do something specific

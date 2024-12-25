@@ -78,6 +78,8 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.toonSpawnpointOrder = [i for i in range(8)]
         self.stunEndTime = 0
         self.myHits = []
+        self.tempHp = self.ruleset.CFO_MAX_HP
+        self.processingHp = False
         return
 
     def setToonSpawnpoints(self, order):
@@ -1009,6 +1011,8 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.bossDamage = bossDamage
         self.updateHealthBar()
         self.bossHealthBar.update(self.ruleset.CFO_MAX_HP - bossDamage, self.ruleset.CFO_MAX_HP)
+        self.processingHp = False
+        self.tempHp = self.ruleset.CFO_MAX_HP - self.bossDamage
 
     def setCraneSpawn(self, want, spawn, toonId):
         self.wantCustomCraneSpawns = want
