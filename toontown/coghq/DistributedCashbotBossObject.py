@@ -418,10 +418,10 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.prepareRelease()
             del self.crane
 
-            # Add this to de-establish local control
-            self.localControl = False
-
             self.showShadows()
+        elif self.newState == 'Grabbed':
+        # Add this to de-establish local control
+            self.localControl = False
 
     def enterGrabbed(self, avId, craneId):
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
@@ -431,8 +431,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.pendingGrab = False
             self.cancelDrop = True
             return
-        
-        
+
         self.pendingGrab = False
 
         if self.oldState == 'LocalGrabbed':
@@ -548,6 +547,11 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # The object is now sliding across the floor under local
         # control.  Crank up the friction so it will slow down more
         # quickly.
+
+        if avId != base.localAvatar.doId and self.localControl:
+            return
+        
+        self.localControl = False
         
         self.avId = avId
         
