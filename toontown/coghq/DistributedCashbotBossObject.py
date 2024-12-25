@@ -431,6 +431,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.pendingGrab = False
             self.cancelDrop = True
             return
+        
+        
+        self.pendingGrab = False
 
         if self.oldState == 'LocalGrabbed':
             if craneId == self.craneId:
