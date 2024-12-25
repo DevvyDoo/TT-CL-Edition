@@ -425,6 +425,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
         # the doId of the crane or the doId of the boss himself.
 
+        if avId == base.localAvatar.doId:
+            self.localControl = False
+
         if (self.oldState == 'SlidingFloor' or self.oldState == 'Free') and self.pendingGrab and self.craneId != self.boss.doId:
             self.pendingGrab = False
             self.cancelDrop = True
@@ -444,9 +447,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
                 # turns out someone else grabbed it instead.
                 self.crane.dropObject(self)
                 self.prepareRelease()
-                
-                # Add this to de-establish local control
-                self.localControl = False
         
         self.avId = avId
         self.craneId = craneId
@@ -466,7 +466,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
                 self.crane.dropObject(self)
         self.prepareRelease()
         self.showShadows()
-        self.localControl = False
         if hasattr(self, 'crane'):
             del self.crane
 
@@ -547,11 +546,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # The object is now sliding across the floor under local
         # control.  Crank up the friction so it will slow down more
         # quickly.
-
-        if avId != base.localAvatar.doId and self.localControl:
-            return
-        
-        self.localControl = False
         
         self.avId = avId
         
@@ -587,6 +581,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.stopSmooth()
 
     def enterFree(self):
+        self.localControl = False
         self.resetSpeedCaching()
         self.avId = 0
         self.craneId = 0
