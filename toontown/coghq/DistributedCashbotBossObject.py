@@ -504,6 +504,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.cancelDrop = False
             return
         
+        self.pendingDrop = False
+        
         self.avId = avId
         self.craneId = craneId
 
