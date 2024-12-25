@@ -419,7 +419,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             del self.crane
 
             # Add this to de-establish local control
-            self.localControl = False
+            if self.nextState == 'Grabbed':
+                self.localControl = False
 
             self.showShadows()
 
@@ -494,6 +495,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.stopPosHprBroadcast()
         del self.crane
         self.showShadows()
+        self.localControl = False
 
     def enterDropped(self, avId, craneId):
 
