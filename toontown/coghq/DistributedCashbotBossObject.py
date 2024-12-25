@@ -315,6 +315,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
         if self.state == 'Off':
             return
+        
+        if (state == 'F' or state == 's' and avId != base.localAvatar.doId) and (self.state in ['LocalGrabbed', 'LocalDropped', 'Grabbed', 'Dropped']):
+            return
 
         if state == 'G':
             if self.state != 'LocalDropped':
