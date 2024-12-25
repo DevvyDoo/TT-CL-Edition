@@ -419,7 +419,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             del self.crane
 
             # Add this to de-establish local control
-            if self.newState == 'Grabbed':
+            if self.nextState == 'Grabbed':
                 self.localControl = False
 
             self.showShadows()
