@@ -425,7 +425,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
         # the doId of the crane or the doId of the boss himself.
 
-        if avId == base.localAvatar.doId:
+        if avId != base.localAvatar.doId:
             self.localControl = False
 
         if (self.oldState == 'SlidingFloor' or self.oldState == 'Free') and self.pendingGrab and self.craneId != self.boss.doId:
