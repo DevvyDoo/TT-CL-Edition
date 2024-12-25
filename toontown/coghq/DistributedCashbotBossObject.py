@@ -75,8 +75,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         
         self.__broadcastPeriod = None
         self.broadcasting = False
-        self.pendingGrab = False
-        self.pendingDrop = False
         self.cancelDrop = False
 
     def _doDebug(self, _=None):
@@ -315,6 +313,10 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
         if self.state == 'Off':
             return
+        
+        # Ignore 'Free' and 'SlidingFloor' states if we're in LocalGrabbed, LocalDropped, Grabbed, Dropped
+        if (state == 'F' or state == 's' and avId != base.localAvatar.doId) and (self.state in ['LocalGrabbed', 'LocalDropped', 'Grabbed', 'Dropped']):
+            return
 
         if state == 'G':
             if self.state != 'LocalDropped':
@@ -339,7 +341,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
     def d_requestGrab(self):
         self.sendUpdate('requestGrab')
-        self.pendingGrab = True
 
     def rejectGrab(self):
         # The server tells us we can't have it for whatever reason.
@@ -427,13 +428,6 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
         if avId != base.localAvatar.doId:
             self.localControl = False
-
-        if (self.oldState == 'SlidingFloor' or self.oldState == 'Free') and self.pendingGrab and self.craneId != self.boss.doId:
-            self.pendingGrab = False
-            self.cancelDrop = True
-            return
-
-        self.pendingGrab = False
 
         if self.oldState == 'LocalGrabbed':
             if craneId == self.craneId:
