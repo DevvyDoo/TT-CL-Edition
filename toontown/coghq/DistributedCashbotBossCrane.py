@@ -126,6 +126,8 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.craneMoveSfx = base.loader.loadSfx('phase_9/audio/sfx/CHQ_FACT_elevator_up_down.ogg')
         
         self.fadeTrack = None
+
+        self.locallyExited = False
         
         self.setBroadcastStateChanges(True)
         self.accept(self.getStateChangeEvent(), self._doDebug)
@@ -1006,6 +1008,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
 
     def d_requestFree(self):
         self.sendUpdate('requestFree')
+        self.demand('LocalFree')
 
     ### Handle smoothing of distributed updates.  This is similar to
     ### code in DistributedSmoothNode, but streamlined for our
@@ -1225,6 +1228,45 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
 
     def exitLocalControlled(self):
+        if self.newState == 'LocalFree':
+            self.ignore('exitCrane')
+            
+            self.grabTrack.finish()
+            del self.grabTrack
+            
+            if self.toon and not self.toon.isDisabled():
+                self.toon.loop('neutral')
+                self.toon.startSmooth()
+            self.stopWatchJoystick()
+            
+            self.stopPosHprBroadcast()
+            self.stopShadow()
+            self.stopSmooth()
+            
+            if self.avId == localAvatar.doId:
+                # The local toon is no longer in control of the crane.
+                self.__disableControlInterface()
+                self.__deactivatePhysics()
+                self.tube.unstash()
+                
+                localAvatar.orbitalCamera.start()
+                
+                # This is a bit hacky.  Go back to finalBattle mode, but
+                # only if we're still in crane mode.  (We might have been
+                # zapped to 'ouch' mode by a hit.)
+                if self.cr:
+                    place = self.cr.playGame.getPlace()
+                    if place and hasattr(place, 'fsm'):
+                        if place.fsm.getCurrentState().getName() == 'crane':
+                            place.setState('finalBattle')
+                            
+                self.boss.toFinalBattleMode()
+
+                # Go back to the defined setting for FOV effects
+                base.WANT_FOV_EFFECTS = base.settings.get('fovEffects')
+                
+            self.__straightenCable()
+            self.locallyExited = True
         pass
 
     def enterControlled(self, avId):
@@ -1279,6 +1321,10 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.startPosHprBroadcast()
 
     def exitControlled(self):
+        if self.locallyExited:
+            self.locallyExited = False
+            return
+        
         self.ignore('exitCrane')
         
         self.grabTrack.finish()
@@ -1289,6 +1335,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.toon.startSmooth()
         self.stopWatchJoystick()
         
+        print("Stopping Pos Hpr Broadcast")
         self.stopPosHprBroadcast()
         self.stopShadow()
         self.stopSmooth()
@@ -1317,7 +1364,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             
         self.__straightenCable()
 
-    def enterFree(self):
+    def enterLocalFree(self):
         if self.fadeTrack:
             self.fadeTrack.finish()
             self.fadeTrack = None
@@ -1327,24 +1374,42 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         # timeout).
         self.restoreScaleTrack = Sequence(Wait(6), self.getRestoreScaleInterval())
         self.restoreScaleTrack.start()
-        
-        if self.avId == localAvatar.doId:
-            # Five second timeout on grabbing the same crane again.  Go
-            # get a different crane!
-            self.controlModel.setAlphaScale(0.3)
-            self.controlModel.setTransparency(1)
-            taskMgr.doMethodLater(5, self.__allowDetect, self.triggerName)
+
+        # Five second timeout on grabbing the same crane again.  Go
+        # get a different crane!
+        self.controlModel.setAlphaScale(0.3)
+        self.controlModel.setTransparency(1)
+        taskMgr.doMethodLater(5, self.__allowDetect, self.triggerName)
             
-            self.fadeTrack = Sequence(Func(self.controlModel.setTransparency, 1), self.controlModel.colorScaleInterval(0.2, VBase4(1, 1, 1, 0.3)))
-            self.fadeTrack.start()
-        else:
+        self.fadeTrack = Sequence(Func(self.controlModel.setTransparency, 1), self.controlModel.colorScaleInterval(0.2, VBase4(1, 1, 1, 0.3)))
+        self.fadeTrack.start()
+            
+        avLeaving = self.avId
+        messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
+        return
+    
+    def exitLocalFree(self):
+        pass
+
+    def enterFree(self):
+        if self.avId != localAvatar.doId:
+            if self.fadeTrack:
+                self.fadeTrack.finish()
+                self.fadeTrack = None
+
+            # Wait a few seconds before neutralizing the scale; maybe the
+            # same avatar wants to come right back (after his 5-second
+            # timeout).
+            self.restoreScaleTrack = Sequence(Wait(6), self.getRestoreScaleInterval())
+            self.restoreScaleTrack.start()
+            
             # Other players can grab this crane immediately.
             self.trigger.unstash()
             self.accept(self.triggerEvent, self.__hitTrigger)
-            
-        avLeaving = self.avId
-        self.avId = 0
-        messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
+                
+            avLeaving = self.avId
+            self.avId = 0
+            messenger.send('crane-enter-exit-%s' % avLeaving, [base.cr.doId2do.get(avLeaving), None])
         return
 
     def __allowDetect(self, task):
