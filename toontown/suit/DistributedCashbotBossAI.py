@@ -640,8 +640,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             if not self.wantOpeningModifications:
                 side = random.choice(['EmergeA', 'EmergeB'])
             else:
-                for t in self.involvedToons:
-                    avId = t
+                avId = self.involvedToons[self.openingModificationsToonIndex]
                 toon = self.air.doId2do.get(avId)
                 pos = toon.getPos()[1]
                 if pos < -315:

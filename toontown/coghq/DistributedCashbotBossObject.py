@@ -384,7 +384,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.reparentTo(render)
 
     def enterLocalGrabbed(self, avId, craneId):
-        print('enterLocalGrabbed')
+        print(self, '-', 'enterLocalGrabbed')
         # This state is like Grabbed, except that it is only triggered
         # locally.  In this state, we have requested a grab, and we
         # will act as if we have grabbed the object successfully, but
@@ -409,7 +409,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane.grabObject(self)
 
     def exitLocalGrabbed(self):
-        print('exitLocalGrabbed')
+        print(self, '-', 'exitLocalGrabbed')
         if self.newState != 'Grabbed':
             if self.crane:
                 self.crane.dropObject(self)
@@ -419,7 +419,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.showShadows()
 
     def enterGrabbed(self, avId, craneId):
-        print('enterGrabbed:', avId)
+        print(self, '-', 'enterGrabbed:', avId)
         # Grabbed by a crane, or by the boss for a helmet.  craneId is
         # the doId of the crane or the doId of the boss himself.
 
@@ -452,7 +452,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane.grabObject(self)
 
     def exitGrabbed(self):
-        print('exitGrabbed:', self.avId)
+        print(self, '-', 'exitGrabbed:', self.avId)
         if hasattr(self, 'crane'):
             if self.crane:
                 self.crane.dropObject(self)
@@ -462,7 +462,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             del self.crane
 
     def enterLocalDropped(self, avId, craneId):
-        print('enterLocalDropped')
+        print(self, '-', 'enterLocalDropped')
         # As in LocalGrabbed, above, this state is entered locally
         # when we drop the safe, but we have not yet received
         # acknowledgement from the AI that we've dropped it.
@@ -481,7 +481,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.handler.setDynamicFrictionCoef(0)
 
     def exitLocalDropped(self):
-        print('exitLocalDropped')
+        print(self, '-', 'exitLocalDropped')
         if self.newState != 'SlidingFloor' and self.newState != 'Dropped':
             self.deactivatePhysics()
             self.stopPosHprBroadcast()
@@ -489,7 +489,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.showShadows()
 
     def enterDropped(self, avId, craneId):
-        print('enterDropped:', avId)
+        print(self, '-', 'enterDropped:', avId)
         
         self.avId = avId
         self.craneId = craneId
@@ -514,7 +514,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.hideShadows()
 
     def exitDropped(self):
-        print('exitDropped:', self.avId)
+        print(self, '-', 'exitDropped:', self.avId)
         # If I'm the one who dropped it
         # Then I should stop broadcasting
         # the position updates
@@ -532,7 +532,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.showShadows()
 
     def enterSlidingFloor(self, avId):
-        print('enterSlidingFloor:', avId)
+        print(self, '-', 'enterSlidingFloor:', avId)
         # The object is now sliding across the floor under local
         # control.  Crank up the friction so it will slow down more
         # quickly.
@@ -563,7 +563,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.hitFloorSoundInterval.start()
 
     def exitSlidingFloor(self):
-        print('exitSlidingFloor:', self.avId)
+        print(self, '-', 'exitSlidingFloor:', self.avId)
         if self.avId == base.localAvatar.doId:
             taskMgr.remove(self.watchDriftName)
             self.deactivatePhysics()
@@ -572,14 +572,14 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             self.stopSmooth()
 
     def enterFree(self):
-        print('enterFree')
+        print(self, '-', 'enterFree')
         self.localControl = False
         self.resetSpeedCaching()
         self.avId = 0
         self.craneId = 0
 
     def exitFree(self):
-        print('exitFree')
+        print(self, '-', 'exitFree')
         pass
 
     class BroadcastTypes(IntEnum):
