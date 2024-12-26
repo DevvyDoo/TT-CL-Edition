@@ -2125,7 +2125,7 @@ class rng(MagicWord):
         if not boss:
             return "You aren't in a CFO!"
         
-        if args[1] > len(boss.involvedToons) or args[1] < 0:
+        if args[1] >= len(boss.involvedToons) or args[1] < 0:
             return "Invalid toon index, please enter a valid toon index! (0-%s)" % str(len(boss.involvedToons)-1)
 
         if args[0]: 
