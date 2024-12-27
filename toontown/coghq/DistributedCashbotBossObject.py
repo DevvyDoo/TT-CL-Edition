@@ -217,7 +217,9 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
 
     def showTempHitEffect(self, impact, craneId):
 
-        # First check if we should show damage at all
+        if not hasattr(self.boss, 'attackCode'):
+            return
+
         if self.boss.heldObject or self.boss.attackCode != ToontownGlobals.BossCogDizzy:
             return
         

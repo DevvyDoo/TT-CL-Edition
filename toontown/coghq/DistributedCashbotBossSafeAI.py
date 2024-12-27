@@ -147,6 +147,18 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
     def enterGrabbed(self, avId, craneId):
         DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.enterGrabbed(self, avId, craneId)
         self.avoidHelmet = 0
+        
+        # Move collision node far away when grabbed
+        # We can move it very far below the battle area
+        # This prevents goons from self destructing
+        for collNode in self.findAllMatches('**/sphere'):
+            collNode.setPos(0, 0, -1000)  # Move collision 1000 units down
+
+    def exitGrabbed(self):
+        DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.exitGrabbed(self)
+        # Reset collision node position
+        for collNode in self.findAllMatches('**/sphere'):
+            collNode.setPos(0, 0, 0)  # Reset to original position
 
     def enterInitial(self):
         # The safe is in its initial, resting position.
