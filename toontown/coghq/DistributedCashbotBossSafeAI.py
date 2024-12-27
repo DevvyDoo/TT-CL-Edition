@@ -117,16 +117,6 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         if avId == self.avId:
             self.demand('Initial')
 
-    def requestPush(self):
-        # The first client that registers the push will control
-        # the safe unwillingly.
-        
-        if self.state == 'Free':
-            avId = self.air.getAvatarIdFromSender()
-            self.demand('SlidingFloor', avId)
-            self.d_setObjectState('s', avId, 0)
-            self.sendUpdateToAvatarId(avId, 'pushSafe', [])
-
     def requestGrab(self):
         avId = self.air.getAvatarIdFromSender()
         craneId, objectId = self.getCraneAndObject(avId)

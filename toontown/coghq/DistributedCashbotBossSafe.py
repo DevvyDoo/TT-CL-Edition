@@ -86,11 +86,8 @@ class DistributedCashbotBossSafe(DistributedCashbotBossObject.DistributedCashbot
         #print(self.getH())
         #print(self.physicsObject.getOrientation())
         #print("")
-    
+
     def disable(self):
-        # Clean up collision handlers
-        self.ignore(self.collideName + '-BossZap')
-        # Call parent class disable
         del self.boss.safes[self.index]
         DistributedCashbotBossObject.DistributedCashbotBossObject.disable(self)
 
@@ -107,55 +104,32 @@ class DistributedCashbotBossSafe(DistributedCashbotBossObject.DistributedCashbot
         if not self.isEmpty():
             self.reparentTo(anp)
 
+        # It is important that there be no messenger hooks added on
+        # this object at the time we reassign the NodePath.
         NodePath.assign(self, anp)
         
         self.physicsObject = an.getPhysicsObject()
+        #self.copy.physicsObject = an.getPhysicsObject()
+        #print(self.copy.physicsObject.getOrientation())
+        #print(self.copy.physicsObject.getOrientation().getAngle())
+        #self.physicsObject.setOriented(False)
         self.setTag('object', str(self.doId))
-    
+       
         self.collisionNodePath.reparentTo(self)
+        #self.collisionNodePath.setH(180)
         self.handler = PhysicsCollisionHandler()
+        #self.copy = copy.copy(self)
+        #print(self.copy)
         self.handler.addCollider(self.collisionNodePath, self)
 
-        # Keep original collision setup
+        # Set up a collision event so we know when the object hits the
+        # floor, or the boss's target.
         self.collideName = self.uniqueName('collide')
         self.handler.addInPattern(self.collideName + '-%in')
         self.handler.addAgainPattern(self.collideName + '-%in')
         
-        # Add door collision pattern
-        self.accept(self.collideName + '-BossZap', self.__handleDoorCollision)
-        
         self.watchDriftName = self.uniqueName('watchDrift')
         self.startCacheName = self.uniqueName('startSpeedCaching')
-
-    def __handleDoorCollision(self, entry):
-        self.lastKnownEntry = entry
-        if self.state == 'SlidingFloor':
-            self.pushSafe()
-        elif self.state == 'Free':
-            self.d_requestPush()
-            pass
-
-    def pushSafe(self):
-        # Get the node path of what we collided with
-        into_node = self.lastKnownEntry.getIntoNodePath()
-        
-        # Find parent node that would be doorA or doorB
-        door_parent = into_node.getParent()
-        door_name = door_parent.getName()
-        
-        # Only handle actual door collisions
-        if door_name == 'doorA' or door_name == 'doorB':
-            print(f"Safe {self.doId} hit {door_name}!")
-            
-            # Calculate velocity vector like crane drops
-            if door_name == 'doorA':
-                push_velocity = Vec3(0, 15, 5)  # Push backwards with upward
-            else:  # doorB
-                push_velocity = Vec3(0, -15, 5)   # Push forwards with upward
-                
-            # Apply velocity like crane drops
-            self.physicsObject.setVelocity(push_velocity)
-
 
     def getMinImpact(self):
         # This method returns the minimum impact, in feet per second,
@@ -202,8 +176,6 @@ class DistributedCashbotBossSafe(DistributedCashbotBossObject.DistributedCashbot
     def d_requestInitial(self):
         self.sendUpdate('requestInitial')
 
-    def d_requestPush(self):
-        self.sendUpdate('requestPush')
 
 
     ### FSM States ###
