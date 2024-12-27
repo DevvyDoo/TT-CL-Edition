@@ -1414,8 +1414,10 @@ dclass DistributedCashbotBossObject : DistributedSmoothNode {
 dclass DistributedCashbotBossSafe : DistributedCashbotBossObject {
   setIndex(uint8) required broadcast ram;
   requestInitial() airecv clsend;
+  requestPush() airecv clsend;
   move(int16/10, int16/10, int16/10, int16/10) broadcast ram clsend airecv;
   destroyedGoon()  airecv clsend;
+  pushSafe();
 };
 
 dclass DistributedCashbotBossGoon : DistributedCashbotBossObject {

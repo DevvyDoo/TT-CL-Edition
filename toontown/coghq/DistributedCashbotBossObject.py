@@ -384,6 +384,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.reparentTo(render)
 
     def enterLocalGrabbed(self, avId, craneId):
+        if self.physicsActivated:
+            self.deactivatePhysics()
         print(self, '-', 'enterLocalGrabbed')
         # This state is like Grabbed, except that it is only triggered
         # locally.  In this state, we have requested a grab, and we
