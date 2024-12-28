@@ -238,6 +238,8 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             
         damage = math.ceil(damage)
 
+        if damage <= 0:
+            return
 
         if self.boss.processingHp:
             curHp = self.boss.tempHp
