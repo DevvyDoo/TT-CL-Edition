@@ -28,10 +28,18 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         self.avoidHelmet = 0
         
         # A sphere so goons will see and avoid us.
-        cn = CollisionNode('sphere')
-        cs = CollisionSphere(0, 0, 0, 6)
-        cn.addSolid(cs)
-        self.attachNewNode(cn)
+        self.collisionNode = CollisionNode('safe')
+        self.collisionNode.addSolid(CollisionSphere(0, 0, 0, 6))
+        self.collisionNode.setIntoCollideMask(ToontownGlobals.CashbotBossObjectBitmask)
+        self.attachNewNode(self.collisionNode)
+
+    def announceGenerate(self):
+        DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.announceGenerate(self)
+
+        # Set the doId tag here
+        self.collisionNode.setTag('doId', str(self.doId))
+        print(f'Safe {self.doId} collision node tag set.')
+        
 
     def _doDebug(self, _=None):
         self.boss.safeStatesDebug(doId=self.doId, content='(Server) state change %s ---> %s' % (self.oldState, self.newState))
@@ -151,13 +159,13 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         # Move collision node far away when grabbed
         # We can move it very far below the battle area
         # This prevents goons from self destructing
-        for collNode in self.findAllMatches('**/sphere'):
+        for collNode in self.findAllMatches('**/safe'):
             collNode.setPos(0, 0, -1000)  # Move collision 1000 units down
 
     def exitGrabbed(self):
         DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.exitGrabbed(self)
         # Reset collision node position
-        for collNode in self.findAllMatches('**/sphere'):
+        for collNode in self.findAllMatches('**/safe'):
             collNode.setPos(0, 0, 0)  # Reset to original position
 
     def enterInitial(self):
@@ -185,8 +193,9 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         self.avoidHelmet = 0
         
     def move(self, x, y, z, rotation):
-        self.setPosHpr(x, y, z, rotation, 0, 0)
-        self.sendUpdate('move', [x, y, z, rotation])
+        # Update the safe's position and heading
+        self.setSmPosHpr(x, y, z, rotation, 0, 0)  # Smoothly update position and heading
+        self.sendUpdate('move', [x, y, z, rotation])  # Inform the client about the move
 
     # Called from client when a safe destroys a goon
     def destroyedGoon(self):

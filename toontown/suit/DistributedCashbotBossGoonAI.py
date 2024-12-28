@@ -74,6 +74,66 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
         self.cQueue = CollisionHandlerQueue()
         self.cTrav.addCollider(self.feelerNodePath, self.cQueue)
 
+        # Add safeDetectionFeelers from -45° to 45°
+        cn = CollisionNode('safeDetectionFeelers')
+        cn.addSolid(CollisionSphere(0, 0, 0, 0.5))  # Sphere to detect safes
+        cn.setFromCollideMask(ToontownGlobals.CashbotBossObjectBitmask)
+        cn.setIntoCollideMask(BitMask32(0))  # Only detect safes, no collisions INTO these segments
+        self.safeDetectionFeelersPath = self.attachNewNode(cn)
+
+        # Add safeDetectionFeelers to cTrav
+        self.cTrav.addCollider(self.safeDetectionFeelersPath, self.cQueue)
+
+    def __syncEmergePosition(self, task):
+        now = globalClock.getFrameTime()
+        elapsedTime = now - self.departureTime
+        totalTime = self.arrivalTime - self.departureTime
+
+        if elapsedTime >= totalTime:
+            self.setPos(self.emergeEndPos)  # Finalize position at the end
+            return task.done
+
+        # Linear interpolation of position
+        progress = elapsedTime / totalTime
+        newPos = self.emergeStartPos + (self.emergeEndPos - self.emergeStartPos) * progress
+        self.setPos(newPos)
+
+        return task.cont
+
+    def _pushSafe(self, safe):
+        goonPos = self.getPos()
+        safePos = safe.getPos()
+
+        direction = safePos - goonPos
+        if direction.length() > 0:
+            direction.normalize()
+
+        pushDistance = self.velocity * globalClock.getDt()
+        newSafePos = safePos + direction * pushDistance
+        safe.move(newSafePos[0], newSafePos[1], newSafePos[2], safe.getH())
+        print(f"Pushing Safe {safe.doId} to {newSafePos}")
+
+    def __checkSafeCollisions(self, task):
+        print("Checking for collisions...")
+        self.cTrav.traverse(self.boss.scene)
+
+        for i in range(self.cQueue.getNumEntries()):
+            entry = self.cQueue.getEntry(i)
+            intoNodePath = entry.getIntoNodePath()
+            intoNode = intoNodePath.node()
+            fromNode = entry.getFromNode()
+
+            # Only process safe collisions from safe detection feelers
+            if 'safe' in intoNode.getName() and 'safeDetectionFeelers' in fromNode.getName():
+                # Get the safe's doId
+                safeDoIdTag = intoNodePath.getNetTag('doId')
+                if safeDoIdTag:
+                    safeDoId = int(safeDoIdTag)
+                    safe = self.air.doId2do.get(safeDoId)
+                    if safe and safe.state in ['Sliding Floor', 'Free']:
+                        self._pushSafe(safe)
+        return task.cont
+
     def _doDebug(self, _=None):
         self.boss.goonStatesDebug(doId=self.doId, content='(Server) state change %s ---> %s' % (self.oldState, self.newState))
 
@@ -395,17 +455,28 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
         self.target = self.boss.scene.getRelativePoint(self, Point3(0, dist, 0))
         self.departureTime = globalClock.getFrameTime()
         self.arrivalTime = self.departureTime + walkTime
+
+        self.emergeStartPos = self.getPos()
+        self.emergeEndPos = self.target
         
         self.d_setTarget(self.target[0], self.target[1], h, globalClockDelta.localToNetworkTime(self.arrivalTime))
         
         self.__startWalk()
         self.d_setObjectState('a', 0, 0)
+
+        # Start synchronization task
+        taskMgr.add(self.__syncEmergePosition, self.uniqueName('syncEmergePosition'))
         
         taskMgr.doMethodLater(walkTime, self.__recoverWalk, self.uniqueName('recoverWalk'))
+        self.safeDetectionFeelersPath.unstash()
+        taskMgr.add(self.__checkSafeCollisions, self.uniqueName('checkSafeCollisions'))
 
     def exitEmergeA(self):
         self.__stopWalk()
         taskMgr.remove(self.uniqueName('recoverWalk'))
+        taskMgr.remove(self.uniqueName('syncEmergePosition'))
+        self.safeDetectionFeelersPath.stash()
+        taskMgr.remove(self.uniqueName('checkSafeCollisions'))
 
     def enterEmergeB(self):
         # The goon is emerging from door b.
@@ -422,17 +493,28 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
         self.target = self.boss.scene.getRelativePoint(self, Point3(0, dist, 0))
         self.departureTime = globalClock.getFrameTime()
         self.arrivalTime = self.departureTime + walkTime
+
+        self.emergeStartPos = self.getPos()
+        self.emergeEndPos = self.target
         
         self.d_setTarget(self.target[0], self.target[1], h, globalClockDelta.localToNetworkTime(self.arrivalTime))
         
         self.__startWalk()
         self.d_setObjectState('b', 0, 0)
+
+        # Start synchronization task
+        taskMgr.add(self.__syncEmergePosition, self.uniqueName('syncEmergePosition'))
         
         taskMgr.doMethodLater(walkTime, self.__recoverWalk, self.uniqueName('recoverWalk'))
+        self.safeDetectionFeelersPath.unstash()
+        taskMgr.add(self.__checkSafeCollisions, self.uniqueName('checkSafeCollisions'))
 
     def exitEmergeB(self):
         self.__stopWalk()
         taskMgr.remove(self.uniqueName('recoverWalk'))
+        taskMgr.remove(self.uniqueName('syncEmergePosition'))
+        self.safeDetectionFeelersPath.stash()
+        taskMgr.remove(self.uniqueName('checkSafeCollisions'))
 
     def enterBattle(self):
         self.d_setObjectState('B', 0, 0)
@@ -460,3 +542,11 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
             craneId, objectId = self.getCraneAndObject(avId)
             if craneId != 0 and objectId == self.doId:
                 self.demand('Walk', avId, craneId)
+
+    def startSmooth(self):
+        self.sendUpdate('startSmooth')
+        DistributedSmoothNodeAI.startSmooth(self)
+
+    def stopSmooth(self):
+        self.sendUpdate('stopSmooth')
+        DistributedSmoothNodeAI.stopSmooth(self)
