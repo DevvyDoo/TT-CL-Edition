@@ -931,19 +931,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         
         p1 = self.bottomLink.node().getPhysicsObject()
         v = render.getRelativeVector(self.bottomLink, p1.getVelocity())
-        #o = obj.physicsObject.getOrientation()
-        #mult = LQuaternionf(-1, -1, -1, -1)
-        #o.multiply(mult)
-        #obj.setH(180)
-        #if isinstance(obj, DistributedCashbotBossSafe.DistributedCashbotBossSafe):
-        #obj.copy.setH(180)
         obj.physicsObject.setVelocity(v * 1.5)
-        #obj.physicsObject.setOrientation(LOrientationf(1, 0, 0, 0))
-        
-        #print("Pre-collision:")
-        #print(obj.getH())
-        #print(obj.physicsObject.getOrientation())
-        #print("")
         
         # This condition is just for sake of the publish, in case we
         # have gotten into some screwy state.  In the dev environment,
@@ -1203,7 +1191,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.root.reparentTo(render)
 
     def enterLocalControlled(self, avId):
-        print("enterLocalControlled")
         self.avId = avId
         toon = base.cr.doId2do.get(avId)
         if not toon:
@@ -1243,7 +1230,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
 
     def exitLocalControlled(self):
-        print("exitLocalControlled")
         if self.newState == 'LocalFree':
             self.ignore('exitCrane')
             
@@ -1286,7 +1272,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         pass
 
     def enterControlled(self, avId):
-        print("enterControlled")
         if avId != localAvatar.doId:
             if self.oldState == 'LocalControlled':
                 # The local toon is no longer in control of the crane.
@@ -1338,7 +1323,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.startPosHprBroadcast()
 
     def exitControlled(self):
-        print("exitControlled")
         if self.locallyExited and self.avId == localAvatar.doId:
             self.locallyExited = False
             return
@@ -1353,7 +1337,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.toon.startSmooth()
         self.stopWatchJoystick()
         
-        print("Stopping Pos Hpr Broadcast")
         self.stopPosHprBroadcast()
         self.stopShadow()
         self.stopSmooth()
@@ -1383,7 +1366,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.__straightenCable()
 
     def enterLocalFree(self):
-        print("enterLocalFree")
         if self.fadeTrack:
             self.fadeTrack.finish()
             self.fadeTrack = None
@@ -1409,7 +1391,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         return
     
     def exitLocalFree(self):
-        print("exitLocalFree")
         if self.newState == 'Controlled':
             # Cancel the restore scale track
             if hasattr(self, 'restoreScaleTrack'):
@@ -1429,7 +1410,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             self.controlModel.clearTransparency()
 
     def enterFree(self):
-        print("enterFree")
         print(self.avId, localAvatar.doId)
         if self.avId != localAvatar.doId:
             if self.fadeTrack:

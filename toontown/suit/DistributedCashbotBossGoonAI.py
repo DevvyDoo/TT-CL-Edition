@@ -76,7 +76,7 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
 
         # Add safeDetectionFeelers from -45° to 45°
         cn = CollisionNode('safeDetectionFeelers')
-        cn.addSolid(CollisionSphere(0, 0, 0, 0.5))  # Sphere to detect safes
+        cn.addSolid(CollisionSphere(0, 0, 0, 1.5))  # Sphere to detect safes
         cn.setFromCollideMask(ToontownGlobals.CashbotBossObjectBitmask)
         cn.setIntoCollideMask(BitMask32(0))  # Only detect safes, no collisions INTO these segments
         self.safeDetectionFeelersPath = self.attachNewNode(cn)
@@ -110,11 +110,9 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
 
         pushDistance = self.velocity * globalClock.getDt()
         newSafePos = safePos + direction * pushDistance
-        safe.move(newSafePos[0], newSafePos[1], newSafePos[2], safe.getH())
-        print(f"Pushing Safe {safe.doId} to {newSafePos}")
+        safe.push(newSafePos[0], newSafePos[1], newSafePos[2], safe.getH(), self)
 
     def __checkSafeCollisions(self, task):
-        print("Checking for collisions...")
         self.cTrav.traverse(self.boss.scene)
 
         for i in range(self.cQueue.getNumEntries()):

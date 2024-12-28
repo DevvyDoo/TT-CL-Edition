@@ -31,15 +31,24 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         self.collisionNode = CollisionNode('safe')
         self.collisionNode.addSolid(CollisionSphere(0, 0, 0, 6))
         self.collisionNode.setIntoCollideMask(ToontownGlobals.CashbotBossObjectBitmask)
-        self.attachNewNode(self.collisionNode)
+        self.collisionNodePath = self.attachNewNode(self.collisionNode)
+        
+        # A sphere so safes will see and push us when needed.
+        self.safeToSafeNode = CollisionNode('safe-to-safe')
+        self.safeToSafeNode.addSolid(CollisionSphere(0, 0, 0, 6))
+        self.safeToSafeNode.setIntoCollideMask(ToontownGlobals.CashbotBossObjectBitmask)
+        self.safeToSafeNodePath = self.attachNewNode(self.safeToSafeNode)
+  
+        self.cTrav = CollisionTraverser('safe')
+        self.cQueue = CollisionHandlerQueue()
+        self.cTrav.addCollider(self.safeToSafeNodePath, self.cQueue)
 
     def announceGenerate(self):
         DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.announceGenerate(self)
 
         # Set the doId tag here
         self.collisionNode.setTag('doId', str(self.doId))
-        print(f'Safe {self.doId} collision node tag set.')
-        
+        self.safeToSafeNode.setTag('doId', str(self.doId))
 
     def _doDebug(self, _=None):
         self.boss.safeStatesDebug(doId=self.doId, content='(Server) state change %s ---> %s' % (self.oldState, self.newState))
@@ -147,8 +156,46 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
                 if crane.avId == avId:
                     return (crane.doId, crane.objectId)
         return (0, 0)
+
+    def _pushSafe(self, safe, goon, pushed_safes=None):
+        if pushed_safes is None:
+            pushed_safes = set()
+            
+        # Prevent pushing the same safe multiple times
+        if safe.doId in pushed_safes:
+            return
+        pushed_safes.add(safe.doId)
         
+        thisSafePos = self.getPos()
+        otherSafePos = safe.getPos()
+
+        direction = otherSafePos - thisSafePos
+        if direction.length() > 0:
+            direction.normalize()
+
+        pushDistance = goon.velocity * globalClock.getDt()
+        newSafePos = otherSafePos + direction * pushDistance
+        safe.push(newSafePos[0], newSafePos[1], newSafePos[2], safe.getH(), self)
+    
+    def __checkSafeCollisions(self, goon, pushed_safes=None):
+        if pushed_safes is None:
+            pushed_safes = set()
+            
+        self.cTrav.traverse(self.boss.scene)
         
+        for i in range(self.cQueue.getNumEntries()):
+            entry = self.cQueue.getEntry(i)
+            intoNodePath = entry.getIntoNodePath()
+            intoNode = intoNodePath.node()
+            fromNode = entry.getFromNode()
+
+            if 'safe-to-safe' in intoNode.getName() and 'safe-to-safe' in fromNode.getName():
+                safeDoIdTag = intoNodePath.getNetTag('doId')
+                if safeDoIdTag:
+                    safeDoId = int(safeDoIdTag)
+                    safe = self.air.doId2do.get(safeDoId)
+                    if safe and safe.state in ['Sliding Floor', 'Free']:
+                        self._pushSafe(safe, goon, pushed_safes)
 
     ### FSM States ###
 
@@ -161,11 +208,15 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         # This prevents goons from self destructing
         for collNode in self.findAllMatches('**/safe'):
             collNode.setPos(0, 0, -1000)  # Move collision 1000 units down
+        for collNode in self.findAllMatches('**/safe-to-safe'):
+            collNode.setPos(0, 0, -1000)  # Move collision 1000 units down
 
     def exitGrabbed(self):
         DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.exitGrabbed(self)
         # Reset collision node position
         for collNode in self.findAllMatches('**/safe'):
+            collNode.setPos(0, 0, 0)  # Reset to original position
+        for collNode in self.findAllMatches('**/safe-to-safe'):
             collNode.setPos(0, 0, 0)  # Reset to original position
 
     def enterInitial(self):
@@ -194,8 +245,18 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         
     def move(self, x, y, z, rotation):
         # Update the safe's position and heading
-        self.setSmPosHpr(x, y, z, rotation, 0, 0)  # Smoothly update position and heading
+        self.setPosHpr(x, y, z, rotation, 0, 0)  # Smoothly update position and heading
         self.sendUpdate('move', [x, y, z, rotation])  # Inform the client about the move
+        
+    def push(self, x, y, z, rotation, pusher):
+        # Update the safe's position and heading
+        self.setSmPosHpr(x, y, z, rotation, 0, 0)
+        self.sendUpdate('move', [x, y, z, rotation])
+        
+        # Only check for secondary collisions if being pushed by a goon
+        # This prevents safe-to-safe pushes from triggering more collisions
+        if pusher.__class__.__name__ == 'DistributedCashbotBossGoonAI':
+            self.__checkSafeCollisions(pusher)
 
     # Called from client when a safe destroys a goon
     def destroyedGoon(self):
