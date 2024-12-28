@@ -35,7 +35,7 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
         
         # A sphere so safes will see and push us when needed.
         self.safeToSafeNode = CollisionNode('safe-to-safe')
-        self.safeToSafeNode.addSolid(CollisionSphere(0, 0, 0, 6))
+        self.safeToSafeNode.addSolid(CollisionSphere(0, 0, 0, 8))
         self.safeToSafeNode.setIntoCollideMask(ToontownGlobals.CashbotBossObjectBitmask)
         self.safeToSafeNodePath = self.attachNewNode(self.safeToSafeNode)
   
