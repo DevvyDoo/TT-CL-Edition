@@ -262,3 +262,8 @@ class DistributedCashbotBossSafeAI(DistributedCashbotBossObjectAI.DistributedCas
     def destroyedGoon(self):
         avId = self.air.getAvatarIdFromSender()
         self.boss.d_updateGoonKilledBySafe(avId)
+
+    def enterDropped(self, avId, craneId):
+        DistributedCashbotBossObjectAI.DistributedCashbotBossObjectAI.enterDropped(self, avId, craneId)
+        if self.index != 0 and self.boss.wantAimPractice:  # Only trigger for non-helmet safes during aim mode
+            self.boss.handleSafeDropped(self)
