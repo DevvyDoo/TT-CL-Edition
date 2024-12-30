@@ -58,19 +58,35 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
         self.waitingForHelmet = 0
 
+        # Practice modes
+        self.RNG_MODE = 1
+        self.SAFE_RUSH_PRACTICE = 2
+        self.LIVE_GOON_PRACTICE = 3
+        self.AIM_PRACTICE = 4
+
+        # Practice mode bools
+        self.wantRNGMode = False
         self.wantSafeRushPractice = False
-        self.wantCustomCraneSpawns = False
+        self.wantLiveGoonPractice = False
         self.wantAimPractice = False
-        self.toonsWon = False
         
-        # Controlled RNG parameters, True to enable, False to disable
+        # Practice mode parameters
         self.wantOpeningModifications = False
         self.openingModificationsToonIndex = 0
         self.wantMaxSizeGoons = False
-        self.wantLiveGoonPractice = False
-        self.wantNoStunning = False
 
+        self.wantStunning = False
+
+        self.wantNoStunning = False
+        self.wantFasterGoonSpawns = False
+
+        self.wantAlwaysStunned = False
+
+        self.wantCustomCraneSpawns = False
         self.customSpawnPositions = {}
+
+        self.toonsWon = False
+
         self.goonMinScale = 0.8
         self.goonMaxScale = 2.4
         self.safesWanted = 5
@@ -92,6 +108,66 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
 
         # The index order to spawn toons
         self.toonSpawnpointOrder = [i for i in range(8)]
+
+    def setPracticeParams(self, practiceMode):
+        # Get current state of requested mode before disabling all
+        if practiceMode == self.RNG_MODE:
+            currentState = self.wantRNGMode
+        elif practiceMode == self.SAFE_RUSH_PRACTICE:
+            currentState = self.wantSafeRushPractice
+        elif practiceMode == self.LIVE_GOON_PRACTICE:
+            currentState = self.wantLiveGoonPractice
+        elif practiceMode == self.AIM_PRACTICE:
+            currentState = self.wantAimPractice
+        else:
+            currentState = False
+
+        # Disable all practice modes
+        self.wantRNGMode = False
+        self.wantSafeRushPractice = False
+        self.wantLiveGoonPractice = False
+        self.wantAimPractice = False
+
+        # Disable all practice parameters
+        self.wantOpeningModifications = False
+        self.wantMaxSizeGoons = False
+
+        self.wantStunning = False
+
+        self.wantNoStunning = False
+        self.wantFasterGoonSpawns = False
+
+        self.wantAlwaysStunned = False
+
+
+        # Toggle the requested mode to opposite of its previous state
+        if practiceMode == self.RNG_MODE:
+            self.wantRNGMode = not currentState
+        elif practiceMode == self.SAFE_RUSH_PRACTICE:
+            self.wantSafeRushPractice = not currentState
+        elif practiceMode == self.LIVE_GOON_PRACTICE:
+            self.wantLiveGoonPractice = not currentState
+        elif practiceMode == self.AIM_PRACTICE:
+            self.wantAimPractice = not currentState
+
+        # Enable the requested mode's params
+        if self.wantRNGMode:
+            self.wantOpeningModifications = True
+            self.wantMaxSizeGoons = True
+        elif self.wantSafeRushPractice:
+            self.wantStunning = True
+        elif self.wantLiveGoonPractice:
+            self.wantNoStunning = True
+            self.wantOpeningModifications = True
+            self.openingModificationsToonIndex = 0
+            self.wantFasterGoonSpawns = True
+        elif self.wantAimPractice:
+            self.wantAlwaysStunned = True
+
+        if self.wantAlwaysStunned:
+            self.checkNearby()
+        else:
+            self.stopCheckNearby()
 
     def d_setToonSpawnpointOrder(self):
         self.sendUpdate('setToonSpawnpoints', [self.toonSpawnpointOrder])
@@ -712,7 +788,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             self.makeGoon()
 
         # How long to wait for the next goon?
-        if self.wantLiveGoonPractice:
+        if self.wantFasterGoonSpawns:
             delayTime = 4
         else:
             delayTime = self.progressValue(10, 2)
@@ -813,8 +889,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         is_sidecrane = isinstance(crane, DistributedCashbotBossSideCraneAI.DistributedCashbotBossSideCraneAI)
         hard_hit = impact >= self.ruleset.SIDECRANE_IMPACT_STUN_THRESHOLD
 
-        # Are we in safe rush practice mode? All hits stun in this mode
-        if self.wantSafeRushPractice:
+        # Are we in a mode that enables stuns no matter what?
+        if self.wantStunning:
             return True
 
         # Is the damage enough?
@@ -1095,7 +1171,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
     def __doInitialGoons(self, task):
         self.makeGoon(side='EmergeA')
         self.makeGoon(side='EmergeB')
-        if self.wantLiveGoonPractice:
+        if self.wantFasterGoonSpawns:
             self.waitForNextGoon(7)
         else:
             self.waitForNextGoon(10)

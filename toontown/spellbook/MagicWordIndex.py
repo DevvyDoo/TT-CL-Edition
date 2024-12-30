@@ -1727,7 +1727,8 @@ class HitCFO(MagicWord):
         boss.magicWordHit(dmg, invoker.doId)
 
 
-class rcr(MagicWord):
+class RestartCraneRound(MagicWord):
+    aliases = ["rcr"]
     desc = "Restarts the crane round"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     arguments = [("round", str, False, "next")]
@@ -1758,7 +1759,7 @@ class rcr(MagicWord):
         return "Restarting Crane Round"
 
 
-class spectate(MagicWord):
+class Spectate(MagicWord):
     desc = "Spectates in the crane round"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
@@ -1785,7 +1786,7 @@ class spectate(MagicWord):
         return "%s spectator mode for %s" % ('Disabled' if isSpectating else 'Enabled', toon.getName())
 
 
-class modifiers(MagicWord):
+class Modifiers(MagicWord):
     desc = "Dynamically tweak modifiers mid CFO"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
@@ -1916,7 +1917,7 @@ class modifiers(MagicWord):
             return s
 
 
-class timer(MagicWord):
+class Timer(MagicWord):
     desc = "Changes timer mode for CFO crane round"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
@@ -1973,7 +1974,7 @@ class timer(MagicWord):
             return "Time limit for next crane rounds set to %s seconds" % n
 
 
-class dumpCraneAI(MagicWord):
+class DumpCraneAI(MagicWord):
     desc = "Dumps info about crane on AI side"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
@@ -1999,7 +2000,7 @@ class dumpCraneAI(MagicWord):
         return retString
 
 
-class dumpCraneClient(MagicWord):
+class DumpCraneClient(MagicWord):
     desc = "Dumps info about crane on Client side"
     execLocation = MagicWordConfig.EXEC_LOC_CLIENT
     accessLevel = "MODERATOR"
@@ -2024,7 +2025,7 @@ class dumpCraneClient(MagicWord):
         return retString
 
 
-class setCraneSpawn(MagicWord):
+class SetCraneSpawn(MagicWord):
     desc = "Sets the craning spawn point of a certain toon"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     arguments = [("spawn", int, False, "next")]
@@ -2050,7 +2051,8 @@ class setCraneSpawn(MagicWord):
         return ("Set your spawn position to #%s" % (spawn))
 
 
-class safeRush(MagicWord):
+class SafeRushMode(MagicWord):
+    aliases = ["saferush", "rush"]
     desc = "Sets knockout damage in cfo to 2 for safe rush practice"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
@@ -2067,15 +2069,12 @@ class safeRush(MagicWord):
         if not boss:
             return "You aren't in a CFO!"
 
-        if boss.wantSafeRushPractice:
-            boss.wantSafeRushPractice = False
-            return ("Safe Rush => OFF")
-        else:
-            boss.wantSafeRushPractice = True
-            return ("Safe Rush => ON")
+        boss.setPracticeParams(boss.SAFE_RUSH_PRACTICE)
+        return "Safe Rush Mode => ON" if boss.wantSafeRushPractice else "Safe Rush Mode => OFF"
             
 
-class livegoon(MagicWord):
+class LiveGoonMode(MagicWord):
+    aliases = ["livegoon", "goon"]
     desc = "Sets goon spawn rate to 4 seconds"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
@@ -2091,25 +2090,16 @@ class livegoon(MagicWord):
 
         if not boss:
             return "You aren't in a CFO!"
+        
+        boss.setPracticeParams(boss.LIVE_GOON_PRACTICE)
+        return "Live Goon Mode => ON" if boss.wantLiveGoonPractice else "Live Goon Mode => OFF"
 
-        if boss.wantSafeRushPractice:
-            boss.wantLiveGoonPractice = False
-            boss.wantOpeningModifications = False
-            boss.wantNoStunning = False
-            return ("Live Goon => OFF")
-        else:
-            boss.wantLiveGoonPractice = True
-            boss.wantOpeningModifications = True
-            boss.wantNoStunning = True
-            return ("Live Goon => ON")
-
-
-class rng(MagicWord):
+class RNGMode(MagicWord):
+    aliases = ["rng"]
     desc = "Sets sides to always open your side, and max goon size"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = "MODERATOR"
     arguments = [
-        ("state", int, False, 1), 
         ("toonIndex", int, False, 0)
     ]
 
@@ -2125,21 +2115,16 @@ class rng(MagicWord):
         if not boss:
             return "You aren't in a CFO!"
         
-        if args[1] >= len(boss.involvedToons) or args[1] < 0:
+        if args[0] >= len(boss.involvedToons) or args[0] < 0:
             return "Invalid toon index, please enter a valid toon index! (0-%s)" % str(len(boss.involvedToons)-1)
-
-        if args[0]: 
-            boss.wantOpeningModifications = True
-            boss.openingModificationsToonIndex = args[1]
-            boss.wantMaxSizeGoons = True
-            return ("RNG => ON")
-        else:
-            boss.wantOpeningModifications = False
-            boss.wantMaxSizeGoons = False
-            return ("RNG => OFF")
+        
+        boss.setPracticeParams(boss.RNG_MODE)
+        boss.openingModificationsToonIndex = args[0]
+        return "RNG Mode => ON" if boss.wantRNGMode else "RNG Mode => OFF"
 
 
-class aim(MagicWord):
+class AimMode(MagicWord):
+    aliases = ["aim"]
     desc = "Resets the locations of the safes"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     arguments = [("safes", int, False, 5)]
@@ -2163,15 +2148,10 @@ class aim(MagicWord):
         if boss.state not in ('PrepareBattleThree', 'BattleThree'):
             return "Need to be in a crane round to use!"
 
-        if boss.wantAimPractice:
-            boss.wantAimPractice = False
-            boss.stopCheckNearby()
-            return ("Aim Practice => OFF")
-        else:
-            boss.safesWanted = safes
-            boss.wantAimPractice = True
-            boss.checkNearby()
-            return ("Aim Practice => ON")
+        boss.safesWanted = safes
+        boss.setPracticeParams(boss.AIM_PRACTICE)
+
+        return "Aim Mode => ON" if boss.wantAimPractice else "Aim Mode => OFF"
 
 
 class DisableGoons(MagicWord):
