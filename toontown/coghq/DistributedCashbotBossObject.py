@@ -220,7 +220,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         if not hasattr(self.boss, 'attackCode'):
             return
 
-        if self.boss.heldObject or self.boss.attackCode != ToontownGlobals.BossCogDizzy:
+        if self.boss.heldObject or self.boss.attackCode not in [ToontownGlobals.BossCogDizzy, ToontownGlobals.BossCogDizzyNow]:
             return
         
         timeUntilStunEnd = self.boss.stunEndTime - globalClock.getFrameTime()
