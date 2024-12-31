@@ -83,7 +83,9 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         return
 
     def setToonSpawnpoints(self, order):
+        print("setToonSpawnpoints: ", order)
         self.toonSpawnpointOrder = order
+        print("toonSpawnpointOrder: ", self.toonSpawnpointOrder)
 
     def addToActivityLog(self, doId, content):
         doObj = base.cr.doId2do.get(doId)
@@ -836,6 +838,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             for i in range(len(toons)):
                 toon = base.cr.doId2do.get(toons[i])
                 spawn_index = self.toonSpawnpointOrder[i]
+                print("move -", spawn_index)
                 if toon:
                     posHpr = CraneLeagueGlobals.TOON_SPAWN_POSITIONS[spawn_index]
                     pos = Point3(*posHpr[0:3])
@@ -866,10 +869,11 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                     pos = Point3(*posHpr[0:3])
                     hpr = VBase3(*posHpr[3:6])
                     
-                    # Instantly set the toon’s position/orientation
+                    # Instantly set the toon's position/orientation
                     toon.setPosHpr(pos, hpr)
         else:
             # Otherwise, use the pre-defined spawn-point order
+            print("Spawnpoint Order:/n", self.toonSpawnpointOrder)
             for i in range(len(toons)):
                 toon = base.cr.doId2do.get(toons[i])
                 if toon:
@@ -1605,6 +1609,60 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                 Wait(9.75),
                 LerpColorScaleInterval(sub, 1.25, colorScale=(1, 1, 1, 0), startColorScale=(1, 1, 1, 1),
                                        blendType='easeInOut'),
+                Func(lambda: sub.cleanup())
+            ),
+        ).start()
+
+    def announceCraneRestartRCR(self):
+        restartingOrEnding = 'Restarting '
+        
+        # Main countdown text - made larger and bolder with outline
+        title = OnscreenText(
+            parent=aspect2d,
+            text='3',
+            style=3,
+            fg=(1, 0.2, 0.2, 1),  # Brighter red
+            align=TextNode.ACenter,
+            scale=0.25,  # Increased from 0.2
+            pos=(0, 0.55),
+            font=ToontownGlobals.getCompetitionFont(),
+            shadow=(0, 0, 0, 1),  # Black drop shadow
+            shadowOffset=(0.05, 0.05),  # Shadow offset
+            mayChange=True
+        )
+        title.setR(0)  # Ensure text is not rotated
+        
+        # Subtitle text - made more visible
+        sub = OnscreenText(
+            parent=aspect2d,
+            text=restartingOrEnding + 'crane round...',
+            style=3,
+            fg=(.8, .8, .8, 1),  # Pure white for better visibility
+            align=TextNode.ACenter,
+            scale=0.12,  # Increased from 0.12
+            pos=(0, 0.4),
+            font=ToontownGlobals.getCompetitionFont(),
+            shadow=(0, 0, 0, 1),  # Black drop shadow
+            shadowOffset=(0.04, 0.04)  # Slightly smaller shadow offset for subtitle
+        )
+
+        Parallel(
+            Sequence(
+                LerpColorScaleInterval(title, 0.25, colorScale=(1, 1, 1, 1), startColorScale=(1, 1, 1, 0), blendType='easeInOut'),
+                Wait(0.75),
+                Func(lambda: title.setText('2')),
+                Wait(1),
+                Func(lambda: title.setText('1')),
+                Wait(1),
+                Func(lambda: title.setText('Go!')),
+                Wait(0.25),
+                LerpColorScaleInterval(title, 0.25, colorScale=(1, 1, 1, 0), startColorScale=(1, 1, 1, 1), blendType='easeInOut'),
+                Func(lambda: title.cleanup())
+            ),
+            Sequence(
+                LerpColorScaleInterval(sub, 0.25, colorScale=(1, 1, 1, 1), startColorScale=(1, 1, 1, 0), blendType='easeInOut'),
+                Wait(2.75),
+                LerpColorScaleInterval(sub, 0.25, colorScale=(1, 1, 1, 0), startColorScale=(1, 1, 1, 1), blendType='easeInOut'),
                 Func(lambda: sub.cleanup())
             ),
         ).start()

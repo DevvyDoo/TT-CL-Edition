@@ -1731,11 +1731,11 @@ class RestartCraneRound(MagicWord):
     aliases = ["rcr"]
     desc = "Restarts the crane round"
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
-    arguments = [("round", str, False, "next")]
+    arguments = [("countdown", int, False, 0)]
     accessLevel = "MODERATOR"
 
     def handleWord(self, invoker, avId, toon, *args):
-        battle = args[0]
+        countdown_toggler = args[0]
         from toontown.suit.DistributedCashbotBossAI import DistributedCashbotBossAI
         boss = None
         for do in list(simbase.air.doId2do.values()):
@@ -1746,15 +1746,27 @@ class RestartCraneRound(MagicWord):
         if not boss:
             return "You aren't in a CFO!"
 
+        if countdown_toggler:
+            boss.wantRCRTiming = not boss.wantRCRTiming
+
+        if len(boss.involvedToons) == 2:
+            print("before reversing: ", boss.toonSpawnpointOrder)
+            boss.toonSpawnpointOrder[0], boss.toonSpawnpointOrder[1] = boss.toonSpawnpointOrder[1], boss.toonSpawnpointOrder[0]
+            print("after reversing: ", boss.toonSpawnpointOrder)
+            boss.d_setToonSpawnpointOrder()
+
         if boss.state == 'Elevator':
             boss.sendUpdate('setState', ['Introduction'])
-            
-        boss.clearObjectSpeedCaching()
-        battle = battle.lower()
-        boss.exitIntroduction()
-        if boss.state != 'BattleThree':
-            boss.b_setState('PrepareBattleThree')
-        boss.b_setState('BattleThree')
+        
+        if not boss.wantRCRTiming:
+            boss.clearObjectSpeedCaching()
+            boss.exitIntroduction()
+            if boss.state != 'BattleThree':
+                boss.b_setState('PrepareBattleThree')
+            boss.b_setState('BattleThree')
+        else:
+            taskMgr.doMethodLater(3.25, boss.restartCraneRoundTask, boss.uniqueName('tourneyRestart'))
+            boss.sendUpdate('announceCraneRestartRCR', [])
         
         return "Restarting Crane Round"
 

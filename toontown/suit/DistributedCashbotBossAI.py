@@ -109,6 +109,8 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         # The index order to spawn toons
         self.toonSpawnpointOrder = [i for i in range(8)]
 
+        self.wantRCRTiming = False
+
     def setPracticeParams(self, practiceMode):
         # Get current state of requested mode before disabling all
         if practiceMode == self.RNG_MODE:
@@ -286,7 +288,9 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         safe.move(x, y, z, 360 * random.random())
 
     def d_setToonSpawnpointOrder(self):
+        print("d_setToonSpawnpointOrder: ", self.toonSpawnpointOrder)
         self.sendUpdate('setToonSpawnpoints', [self.toonSpawnpointOrder])
+
 
     def getToonOutgoingMultiplier(self, avId):
         n = self.toonDmgMultipliers.get(avId)
@@ -1155,10 +1159,11 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.__deleteBattleThreeObjects()
 
     def setupSpawnpoints(self):
-        self.toonSpawnpointOrder = [i for i in range(8)]
-        if self.ruleset.RANDOM_SPAWN_POSITIONS:
-            random.shuffle(self.toonSpawnpointOrder)
-        self.d_setToonSpawnpointOrder()
+        if not self.wantRCRTiming:
+            self.toonSpawnpointOrder = [i for i in range(8)]
+            if self.ruleset.RANDOM_SPAWN_POSITIONS:
+                random.shuffle(self.toonSpawnpointOrder)
+            self.d_setToonSpawnpointOrder()
 
     ##### PrepareBattleThree state #####
     def enterPrepareBattleThree(self):
@@ -1233,6 +1238,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.toonDmgMultipliers = {}
 
         taskMgr.remove(self.uniqueName('failedCraneRound'))
+        taskMgr.remove(self.uniqueName('tourneyRestart'))
         self.cancelReviveTasks()
 
         for comboTracker in self.comboTrackers.values():
@@ -1285,7 +1291,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         taskMgr.remove(self.uniqueName('post-times-up-task'))
 
         if self.ruleset.RESTART_CRANE_ROUND_ON_FAIL:
-            self.__restartCraneRoundTask(None)
+            self.restartCraneRoundTask(None)
         else:
             self.b_setState('Victory')
 
@@ -1398,9 +1404,11 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         # Remove this method as it's no longer needed
         pass
 
-    def __restartCraneRoundTask(self, task):
+    def restartCraneRoundTask(self, task):
+        self.clearObjectSpeedCaching()
         self.exitIntroduction()
-        self.b_setState('PrepareBattleThree')
+        if self.state != 'BattleThree':
+            self.b_setState('PrepareBattleThree')
         self.b_setState('BattleThree')
 
     def __reviveToonLater(self, toon):
@@ -1445,7 +1453,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         if self.ruleset.RESTART_CRANE_ROUND_ON_FAIL and not aliveToons:
             taskMgr.remove(self.uniqueName('times-up-task'))
             taskMgr.remove(self.uniqueName('post-times-up-task'))
-            taskMgr.doMethodLater(10.0, self.__restartCraneRoundTask, self.uniqueName('failedCraneRound'))
+            taskMgr.doMethodLater(10.0, self.restartCraneRoundTask, self.uniqueName('failedCraneRound'))
             self.sendUpdate('announceCraneRestart', [])
 
         # End the crane round if all toons are dead and we aren't reviving them
