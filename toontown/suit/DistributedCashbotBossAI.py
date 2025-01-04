@@ -69,7 +69,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         
         # Controlled RNG parameters, True to enable, False to disable
         self.wantOpeningModifications = False
-        self.wantMaxSizeGoons = False
+        self.wantMaxSizeGoons = True
         self.wantLiveGoonPractice = False
         self.wantNoStunning = False
 
@@ -673,7 +673,7 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
             goon_strength = int(self.progressRandomValue(self.ruleset.MIN_GOON_DAMAGE, self.ruleset.MAX_GOON_DAMAGE))
             elapsed = globalClock.getFrameTime() - self.battleThreeStart
             print("Elapsed Time: %s" % elapsed)
-            if self.wantCraneThreePractice or True:
+            if self.wantCraneThreePractice:
                 if elapsed > 5:
                     goon_scale = 0.61
                 else:
