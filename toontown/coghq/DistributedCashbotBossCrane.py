@@ -103,7 +103,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         self.armSmoother.setSmoothMode(SmoothMover.SMOn)
         self.linkSmoothers = []
         self.smoothStarted = 0
-        self.__broadcastPeriod = 0.05
+        self.__broadcastPeriod = 0.01
 
         # Since the cable might not calculate its bounding volume
         # correctly, let's say that anything that passes the outer
@@ -1320,7 +1320,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
         elif avId == localAvatar.doId and self.pendingControl:
             localAvatar.sendCurrentPosition()
-            self.startPosHprBroadcast(period=0.01)
+            self.startPosHprBroadcast()
 
     def exitControlled(self):
         if self.locallyExited and self.avId == localAvatar.doId:

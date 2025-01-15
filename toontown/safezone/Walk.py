@@ -25,7 +25,7 @@ class Walk(StateData.StateData):
         del self.fsm
 
     def enter(self, slowWalk = 0):
-        base.localAvatar.startPosHprBroadcast(period=0.01)
+        base.localAvatar.startPosHprBroadcast()
         base.localAvatar.startBlink()
         shouldPush = 1
         if len(base.localAvatar.cameraPositions) > 0:

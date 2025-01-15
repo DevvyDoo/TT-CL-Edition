@@ -290,7 +290,7 @@ class Place(StateData.StateData, FriendsListManager.FriendsListManager):
         base.localAvatar.setTeleportAvailable(1)
         base.localAvatar.attachCamera()
         base.localAvatar.startUpdateSmartCamera()
-        base.localAvatar.startPosHprBroadcast(period=0.01)
+        base.localAvatar.startPosHprBroadcast()
         base.localAvatar.b_setAnimState('Push', 1)
 
     def exitPush(self):
@@ -755,7 +755,7 @@ class Place(StateData.StateData, FriendsListManager.FriendsListManager):
 
         base.localAvatar.orbitalCamera.setPresetPos(base.localAvatar.orbitalCamera.presetPos, transition=False)
 
-        base.localAvatar.startPosHprBroadcast(period=0.01)
+        base.localAvatar.startPosHprBroadcast()
         globalClock.tick()
         base.localAvatar.b_setAnimState('TeleportIn', 1, callback=self.teleportInDone)
         base.localAvatar.d_broadcastPositionNow()
