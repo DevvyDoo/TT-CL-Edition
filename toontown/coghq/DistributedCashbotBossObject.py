@@ -472,7 +472,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         self.crane = self.cr.doId2do.get(craneId)
         
         self.activatePhysics()
-        self.startPosHprBroadcast(avId=self.avId, period=.05)
+        self.startPosHprBroadcast(avId=self.avId, period=.01)
         self.hideShadows()
 
         # Set slippery physics so it will slide off the boss.
@@ -498,7 +498,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
         # the position updates
         if self.avId == base.localAvatar.doId:
             self.activatePhysics()
-            self.startPosHprBroadcast(avId=self.avId, period=.05)
+            self.startPosHprBroadcast(avId=self.avId, period=.01)
             self.handler.setStaticFrictionCoef(0)
             self.handler.setDynamicFrictionCoef(0)
         # Otherwise, I'm the one receiving the
@@ -540,7 +540,7 @@ class DistributedCashbotBossObject(DistributedSmoothNode.DistributedSmoothNode, 
             
         if self.avId == base.localAvatar.doId:
             self.activatePhysics()
-            self.startPosHprBroadcast(avId=self.avId, period=.05)
+            self.startPosHprBroadcast(avId=self.avId, period=.01)
             
             self.handler.setStaticFrictionCoef(0.9)
             self.handler.setDynamicFrictionCoef(0.5)

@@ -1320,7 +1320,7 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
             messenger.send('crane-enter-exit-%s' % self.avId, [self.avId, self])
         elif avId == localAvatar.doId and self.pendingControl:
             localAvatar.sendCurrentPosition()
-            self.startPosHprBroadcast()
+            self.startPosHprBroadcast(period=0.01)
 
     def exitControlled(self):
         if self.locallyExited and self.avId == localAvatar.doId:
