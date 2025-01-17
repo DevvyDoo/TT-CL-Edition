@@ -113,6 +113,7 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
         safe.push(newSafePos[0], newSafePos[1], newSafePos[2], safe.getH(), self)
 
     def __checkSafeCollisions(self, task):
+        
         self.cTrav.traverse(self.boss.scene)
 
         for i in range(self.cQueue.getNumEntries()):
@@ -467,7 +468,8 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
         
         taskMgr.doMethodLater(walkTime, self.__recoverWalk, self.uniqueName('recoverWalk'))
         self.safeDetectionFeelersPath.unstash()
-        taskMgr.add(self.__checkSafeCollisions, self.uniqueName('checkSafeCollisions'))
+        if not self.boss.wantAimPractice:
+            taskMgr.add(self.__checkSafeCollisions, self.uniqueName('checkSafeCollisions'))
 
     def exitEmergeA(self):
         self.__stopWalk()
@@ -505,7 +507,8 @@ class DistributedCashbotBossGoonAI(DistributedGoonAI.DistributedGoonAI, Distribu
         
         taskMgr.doMethodLater(walkTime, self.__recoverWalk, self.uniqueName('recoverWalk'))
         self.safeDetectionFeelersPath.unstash()
-        taskMgr.add(self.__checkSafeCollisions, self.uniqueName('checkSafeCollisions'))
+        if not self.boss.wantAimPractice:
+            taskMgr.add(self.__checkSafeCollisions, self.uniqueName('checkSafeCollisions'))
 
     def exitEmergeB(self):
         self.__stopWalk()
