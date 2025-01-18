@@ -39,6 +39,9 @@ class DistributedSuitBaseAI(DistributedAvatarAI.DistributedAvatarAI, SuitBase.Su
             self.requestDelete()
         return
 
+    def _calculateHp(self):
+        return (self.getActualLevel() + 1) * (self.getActualLevel() + 2)
+
     def setLevel(self, lvl=None):
         attributes = SuitBattleGlobals.SuitAttributes[self.dna.name]
         if lvl:
@@ -48,7 +51,12 @@ class DistributedSuitBaseAI(DistributedAvatarAI.DistributedAvatarAI, SuitBase.Su
         self.notify.debug('Assigning level ' + str(lvl))
         if hasattr(self, 'doId'):
             self.d_setLevelDist(self.level)
-        hp = attributes['hp'][self.level]
+
+        try:
+            hp = attributes['hp'][self.level]
+        except IndexError:
+            hp = self._calculateHp()
+            
         self.maxHP = hp
         self.currHP = hp
 
