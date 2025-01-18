@@ -1749,10 +1749,10 @@ class RestartCraneRound(MagicWord):
         if countdown_toggler:
             boss.wantRCRTiming = not boss.wantRCRTiming
 
+        boss.setupSpawnpoints()
+        
         if len(boss.involvedToons) == 2:
-            print("before reversing: ", boss.toonSpawnpointOrder)
             boss.toonSpawnpointOrder[0], boss.toonSpawnpointOrder[1] = boss.toonSpawnpointOrder[1], boss.toonSpawnpointOrder[0]
-            print("after reversing: ", boss.toonSpawnpointOrder)
             boss.d_setToonSpawnpointOrder()
 
         if boss.state == 'Elevator':
