@@ -1,4 +1,5 @@
 import functools
+import time
 
 from direct.gui.OnscreenText import OnscreenText
 from direct.interval.IntervalGlobal import *
@@ -72,6 +73,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.warningSfx = None
         
         self.latency = 0.5 #default latency for updating object posHpr
+        self.startTimestamp = time.time()
 
         self.activityLog = ActivityLog()
 
@@ -1257,6 +1259,8 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def enterBattleThree(self):
 
+        self.startTimestamp = time.time()
+
         if self.bossHealthBar:
             self.bossHealthBar.cleanup()
             self.bossHealthBar = BossHealthBar.BossHealthBar(self.style.dept)
@@ -1720,3 +1724,13 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         if not allowFloat:
             mult = int(mult)
         return mult
+
+    def getElapsedTime(self):
+        return time.time() - self.startTimestamp
+
+    def zapLocalToon(self, attackCode, origin = None):
+
+        if self.getElapsedTime() <= 2:
+            return
+
+        super().zapLocalToon(attackCode, origin)
