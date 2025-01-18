@@ -3,6 +3,8 @@ import json
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectGlobal import DistributedObjectGlobal
 
+import base64
+
 
 class TTOffFriendsManager(DistributedObjectGlobal):
     notify = DirectNotifyGlobal.directNotify.newCategory('TTOffFriendsManager')
@@ -12,11 +14,16 @@ class TTOffFriendsManager(DistributedObjectGlobal):
 
     def avatarDetailsResp(self, avId, details):
         fields = json.loads(details)
+
+        # The following fields were converted to a string to satisfy json.dumps() from UD and need conversion
+        BYTE_FIELDS = ('setExperience', 'setDNAString', 'setInventory')
+
         for currentField in fields:
-            if currentField[0] in (
-                    'setDNAString', 'setMailboxContents', 'setAwardMailboxContents', 'setGiftSchedule',
-                    'setDeliverySchedule', 'setAwardSchedule'):
-                currentField[1] = currentField[1].decode('base64')
+            fieldName: str = currentField[0]
+
+            # If we have an encoded byte field, go back to what it was
+            if fieldName in BYTE_FIELDS:
+                currentField[1] = base64.b64decode(currentField[1])
 
         base.cr.handleGetAvatarDetailsResp(avId, fields=fields)
 
