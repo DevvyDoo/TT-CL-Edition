@@ -193,10 +193,10 @@ class CFORuleset:
         self.LOW_LAFF_BONUS_INCLUDE_PENALTIES = False  # Should penalties also be increased when low on laff?
 
         # note: When REVIVE_TOONS_UPON_DEATH is True, the only fail condition is if we run out of time
-        self.RESTART_CRANE_ROUND_ON_FAIL = True  # Should we restart the crane round if all toons die?
+        self.RESTART_CRANE_ROUND_ON_FAIL = False  # Should we restart the crane round if all toons die?
         self.REVIVE_TOONS_UPON_DEATH = True  # Should we revive a toon that dies after a certain amount of time? (essentially a stun)
-        self.REVIVE_TOONS_TIME = 10  # Time in seconds to revive a toon after death
-        self.REVIVE_TOONS_LAFF_PERCENTAGE = 0.50  # How much laff should we give back to the toon when revived?
+        self.REVIVE_TOONS_TIME = 5  # Time in seconds to revive a toon after death
+        self.REVIVE_TOONS_LAFF_PERCENTAGE = 0.75  # How much laff should we give back to the toon when revived?
 
         # A for fun mechanic that makes toons have permanent damage buffs based on how much damage they do
         self.WANT_MOMENTUM_MECHANIC = False
@@ -204,22 +204,22 @@ class CFORuleset:
         # POINTS SETTINGS
         self.POINTS_GOON_STOMP = 1  # Points per goon stomp
         self.POINTS_STUN = 10  # Points per stun
-        self.POINTS_SIDESTUN = 25  # Points per stun on sidecrane
-        self.POINTS_IMPACT = 3  # Points given when a max impact hit is achieved
-        self.POINTS_DESAFE = 10  # Points for taking a safe helmet off
-        self.POINTS_GOON_KILLED_BY_SAFE = 2  # Points for killing a goon with a safe
+        self.POINTS_SIDESTUN = 30  # Points per stun on sidecrane
+        self.POINTS_IMPACT = 2  # Points given when a max impact hit is achieved
+        self.POINTS_DESAFE = 20  # Points for taking a safe helmet off
+        self.POINTS_GOON_KILLED_BY_SAFE = 3  # Points for killing a goon with a safe
         self.POINTS_KILLING_BLOW = 0  # Points for dealing the killing blow to the CFO
 
-        self.POINTS_PENALTY_SAFEHEAD = -25  # Deduction for putting a safe on the CFOs head
-        self.POINTS_PENALTY_GO_SAD = -50  # Point deduction for dying (can happen multiple times if revive setting is on)
-        self.POINTS_PENALTY_SANDBAG = -5  # Point deduction for hitting a very low impact hit
-        self.POINTS_PENALTY_UNSTUN = -25
+        self.POINTS_PENALTY_SAFEHEAD = -20  # Deduction for putting a safe on the CFOs head
+        self.POINTS_PENALTY_GO_SAD = -20  # Point deduction for dying (can happen multiple times if revive setting is on)
+        self.POINTS_PENALTY_SANDBAG = -2  # Point deduction for hitting a very low impact hit
+        self.POINTS_PENALTY_UNSTUN = 0
 
-        self.TREASURE_POINT_PENALTY = True  # Should we deduct points for picking up treasures?
+        self.TREASURE_POINT_PENALTY = False  # Should we deduct points for picking up treasures?
         self.TREASURE_POINT_PENALTY_FLAT_RATE = 1  # How much should we deduct? set to 0 or less to make it 1 to 1 with laff gained
 
         # COMBO SETTINGS
-        self.COMBO_DURATION = 2.0  # How long should combos last?
+        self.COMBO_DURATION = 0  # How long should combos last?
         self.TREASURE_GRAB_RESETS_COMBO = True  # Should picking up a treasure reset a toon's combo?
 
         self.MODIFIER_TIER_RANGE = (1, 3)  # todo Perhaps refactor this into the modifier class
