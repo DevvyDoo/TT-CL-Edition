@@ -366,10 +366,14 @@ class DistributedCashbotBossAI(DistributedBossCogAI.DistributedBossCogAI, FSM.FS
         self.sendUpdate('updateSpectators', [self.spectators])
 
     def progressValue(self, fromValue, toValue):
-        t0 = float(self.bossDamage) / float(self.ruleset.CFO_MAX_HP)
-        elapsed = globalClock.getFrameTime() - self.battleThreeStart
-        t1 = elapsed / float(self.battleThreeDuration)
-        t = max(t0, t1)
+        if self.ruleset.TIMER_MODE:
+            elapsed = globalClock.getFrameTime() - self.battleThreeStart
+            t = elapsed / float(self.ruleset.TIMER_MODE_TIME_LIMIT)
+        else:
+            t0 = float(self.bossDamage) / float(self.ruleset.CFO_MAX_HP)
+            elapsed = globalClock.getFrameTime() - self.battleThreeStart
+            t1 = elapsed / float(self.battleThreeDuration)
+            t = max(t0, t1)
         return fromValue + (toValue - fromValue) * min(t, 1)
 
     # Any time you change the ruleset, you should call this to sync the clients
