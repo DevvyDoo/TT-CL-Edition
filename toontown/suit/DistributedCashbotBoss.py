@@ -584,18 +584,6 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         battleHpr = VBase3(ToontownGlobals.CashbotBossBattleOnePosHpr[3], ToontownGlobals.CashbotBossBattleOnePosHpr[4], ToontownGlobals.CashbotBossBattleOnePosHpr[5])
         bossTrack = Sequence()
 
-        # Put him on stage.
-        bossTrack.append(Func(self.reparentTo, render))
-        bossTrack.append(Func(self.getGeomNode().setH, 180))
-        bossTrack.append(Func(self.pelvis.setHpr, self.pelvisForwardHpr))
-        bossTrack.append(Func(self.loop, 'Ff_neutral'))
-        track, hpr = self.rollBossToPoint(startPos, None, battlePos, None, 0)
-        bossTrack.append(track)
-        track, hpr = self.rollBossToPoint(battlePos, hpr, battlePos, battleHpr, 0)
-        bossTrack.append(track)
-        bossTrack.append(Func(self.getGeomNode().setH, 0))
-        bossTrack.append(Func(self.pelvis.setHpr, self.pelvisReversedHpr))
-
         # Create a track for the fake goons
         goonTrack = self.__makeGoonMovieForIntro()
         attackToons = TTL.CashbotBossCogAttack
@@ -634,20 +622,6 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
                         #Open the CFO door
                         self.door1.posInterval(2, VBase3(0, 0, 30)),
-
-                        #Roll the CFO in and close the door
-                        Parallel(
-                            bossTrack,
-                            Sequence(
-                                Wait(3),
-                                Func(rToon.clearChat),
-                                self.door1.posInterval(3, VBase3(0, 0, 0)))),
-
-                            #Close-up of the CFO...
-                            Func(self.setChatAbsolute, TTL.CashbotBossDiscoverToons1, CFSpeech),
-                            camera.posHprInterval(1.5, Point3(93.3, -230, 0.7), VBase3(-92.9, 39.7, 8.3)),
-                            Func(self.setChatAbsolute, TTL.CashbotBossDiscoverToons2, CFSpeech),
-                            Wait(4),
 
                             # Cut to toons losing their cog suits.
                             Func(self.clearChat),
@@ -891,38 +865,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
         hadEnough = TTLocalizer.CashbotBossHadEnough
         outtaHere = TTLocalizer.CashbotBossOuttaHere
-        loco = loader.loadModel('phase_10/models/cogHQ/CashBotLocomotive')
-        car1 = loader.loadModel('phase_10/models/cogHQ/CashBotBoxCar')
-        car2 = loader.loadModel('phase_10/models/cogHQ/CashBotTankCar')
-        trainPassingSfx = base.loader.loadSfx('phase_10/audio/sfx/CBHQ_TRAIN_pass.ogg')
-        boomSfx = loader.loadSfx('phase_3.5/audio/sfx/ENC_cogfall_apart.ogg')
-        rollThroughDoor = self.rollBossToPoint(fromPos=Point3(120, -280, 0), fromHpr=None, toPos=Point3(120, -250, 0), toHpr=None, reverse=0)
-        rollTrack = Sequence(Func(self.getGeomNode().setH, 180), rollThroughDoor[0], Func(self.getGeomNode().setH, 0))
 
-
-        # Generate a track that shows one long train running by (which
-        # it achieves by running the same two cars repeatedly past
-        # the door).
-
-        # The trains move at 300 ft/s, so a gap of this much time puts
-        # car2 80 ft behind car1.
-        g = 80.0 / 300.0
-        trainTrack = Track(
-            (0 * g, loco.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (1 * g, car2.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (2 * g, car1.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (3 * g, car2.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (4 * g, car1.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (5 * g, car2.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (6 * g, car1.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (7 * g, car2.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (8 * g, car1.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (9 * g, car2.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (10 * g, car1.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (11 * g, car2.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (12 * g, car1.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (13 * g, car2.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))),
-            (14 * g, car1.posInterval(0.5, Point3(0, -242, 0), startPos=Point3(150, -242, 0))))
         bossTrack = Track(
             (0.0, Sequence(
                 Func(camera.reparentTo, render),
