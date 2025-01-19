@@ -219,7 +219,8 @@ class CFORuleset:
         self.TREASURE_POINT_PENALTY_FLAT_RATE = 1  # How much should we deduct? set to 0 or less to make it 1 to 1 with laff gained
 
         # COMBO SETTINGS
-        self.COMBO_DURATION = 0  # How long should combos last?
+        self.WANT_COMBO_BONUS = False
+        self.COMBO_DURATION = 2.0  # How long should combos last?
         self.TREASURE_GRAB_RESETS_COMBO = True  # Should picking up a treasure reset a toon's combo?
 
         self.MODIFIER_TIER_RANGE = (1, 3)  # todo Perhaps refactor this into the modifier class
