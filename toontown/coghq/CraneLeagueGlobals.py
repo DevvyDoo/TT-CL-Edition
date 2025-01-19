@@ -467,6 +467,30 @@ class CFORulesetModifierBase(object):
 
 
 # Now here is where we can actually define our modifiers
+class ModifierTimerEnabler(CFORulesetModifierBase):
+    MODIFIER_ENUM = 26
+    MODIFIER_TYPE = CFORulesetModifierBase.SPECIAL
+    TITLE_COLOR = CFORulesetModifierBase.DARK_PURPLE
+    DESCRIPTION_COLOR = CFORulesetModifierBase.PURPLE
+
+    def getName(self):
+        return "Timed!"
+    
+    def _getTime(self):
+        return self.tier * 60
+    
+    def getDescription(self):
+        return f'The CFO will automatically end in %(color_start)s{self._getTime()}%(color_end)s!'
+    
+    def getHeat(self):
+        return 0
+    
+    def apply(self, cfoRuleset):
+        cfoRuleset.TIMER_MODE = True
+        cfoRuleset.TIMER_MODE_TIME_LIMIT = self._getTime()
+        cfoRuleset.CFO_MAX_HP = 3000
+
+
 class ModifierComboExtender(CFORulesetModifierBase):
     MODIFIER_ENUM = 0
     MODIFIER_TYPE = CFORulesetModifierBase.HELPFUL
