@@ -773,7 +773,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             Func(crane.request, 'Free'),
 
             #fix the CFO's orientation
-            Func(self.getGeomNode().setH, 0),
+            Func(self.forwardHead),
             self.moveToonsToBattleThreePos(self.getInvolvedToonsNotSpectating()),
             Func(self.__showToons))
 
