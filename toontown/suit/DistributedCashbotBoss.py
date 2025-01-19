@@ -56,10 +56,10 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.safes = {}
         self.goons = []
         self.elevatorType = ElevatorConstants.ELEVATOR_CFO
-        
+
         #hack for quick access while debugging
         base.boss = self
-        
+
         self.wantCustomCraneSpawns = False
         self.customSpawnPositions = {}
         self.ruleset = CraneLeagueGlobals.CFORuleset()  # Setup a default ruleset as a fallback
@@ -71,7 +71,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.localToonSpectating = False
         self.endVault = None
         self.warningSfx = None
-        
+
         self.latency = 0.5 #default latency for updating object posHpr
         self.startTimestamp = time.time()
 
@@ -154,13 +154,13 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             time_limit=self.ruleset.TIMER_MODE_TIME_LIMIT) if self.ruleset.TIMER_MODE else BossSpeedrunTimer()
         self.bossSpeedrunTimer.hide()
         base.cr.forbidCheesyEffects(1)
-        
+
         # at this point all our attribs have been filled in.
         self.setName(TTLocalizer.CashbotBossName)
         nameInfo = TTLocalizer.BossCogNameWithDept % {'name': self._name,
          'dept': SuitDNA.getDeptFullname(self.style.dept)}
         self.setDisplayName(nameInfo)
-        
+
         # Our goal in this battle is to drop stuff on the CFO's head.
         # For this, we need a target.
         target = CollisionSphere(2, 0, 0, 3)
@@ -191,12 +191,12 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         # with the sellbot boss, and the comment over there seems to
         # think it's a great idea. :)
         self.loadEnvironment()
-        
+
         # Set up the caged toon.
         self.__makeResistanceToon()
-        
+
         # Set up a physics manager for the cables and the objects
-        # falling around in the room.        
+        # falling around in the room.
         self.physicsMgr = PhysicsManager()
         integrator = LinearEulerIntegrator()
         self.physicsMgr.attachLinearIntegrator(integrator)
@@ -205,10 +205,10 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         gravity = LinearVectorForce(0, 0, -32)
         fn.addForce(gravity)
         self.physicsMgr.addLinearForce(gravity)
-        
+
         # Enable the special CFO chat menu.
         localAvatar.chatMgr.chatInputSpeedChat.addCFOMenu()
-        
+
         # The crane round scoreboard
         self.scoreboard = CashbotBossScoreboard(ruleset=self.ruleset)
         self.scoreboard.hide()
@@ -219,7 +219,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         if OneBossCog != None:
             self.notify.warning('Multiple BossCogs visible.')
         OneBossCog = self
-        
+
         return
 
     def getBossMaxDamage(self):
@@ -307,13 +307,13 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         npc.animFSM.request('neutral')
         self.resistanceToon = npc
         self.resistanceToon.setPosHpr(*ToontownGlobals.CashbotRTBattleOneStartPosHpr)
-        
+
         # determine a random suit to put him in
         state = random.getstate()
         random.seed(self.doId)
         self.resistanceToon.suitType = SuitDNA.getRandomSuitByDept('m')
         random.setstate(state)
-        
+
         # Make some goons for the resistance toon to play with
         self.fakeGoons = []
         for i in range(self.numFakeGoons):
@@ -428,7 +428,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
         # Flag the collisions in the end vault so safes and magnets
         # don't try to go through the wall.
-        self.disableBackWall()        
+        self.disableBackWall()
 
         # Get the rolling doors.
 
@@ -451,16 +451,16 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         # Set up an origin for the elevator
         elevatorOrigin = self.midVault.find('**/elevator_origin')
         elevatorOrigin.setScale(1)
-        
+
         elevatorModel.reparentTo(elevatorOrigin)
-        
+
         leftDoor = elevatorModel.find('**/left_door')
         leftDoor.setName('left-door')
         rightDoor = elevatorModel.find('**/right_door')
         rightDoor.setName('right-door')
         self.setupElevator(elevatorOrigin)
         ElevatorUtils.closeDoors(leftDoor, rightDoor, ElevatorConstants.ELEVATOR_CFO)
-        
+
         # Find all the wall polygons and replace them with planes,
         # which are solid, so there will be zero chance of safes or
         # toons slipping through a wall.
@@ -519,7 +519,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                     newCollisionNode.addSolid(plane)
 
         newCollisionNode.setIntoCollideMask(newCollideMask)
-        
+
         # Now sort all of the planes and remove the nonunique ones.
         # We can't use traditional dictionary-based tricks, because we
         # want to use Plane.compareTo(), not Plane.__hash__(), to make
@@ -583,7 +583,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         battlePos = Point3(ToontownGlobals.CashbotBossBattleOnePosHpr[0], ToontownGlobals.CashbotBossBattleOnePosHpr[1], ToontownGlobals.CashbotBossBattleOnePosHpr[2])
         battleHpr = VBase3(ToontownGlobals.CashbotBossBattleOnePosHpr[3], ToontownGlobals.CashbotBossBattleOnePosHpr[4], ToontownGlobals.CashbotBossBattleOnePosHpr[5])
         bossTrack = Sequence()
-        
+
         # Put him on stage.
         bossTrack.append(Func(self.reparentTo, render))
         bossTrack.append(Func(self.getGeomNode().setH, 180))
@@ -610,7 +610,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             #start the goons on their paths
             Sequence(goonTrack, duration=0),
             #Func(goonTrack.start),
-            
+
             #RT runs to the endvault door and opens it
             Parallel(
                 camera.posHprInterval(4, Point3(108, -244, 4), VBase3(211.5, 0, 0)),
@@ -625,16 +625,16 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                             Func(rToon.clearChat))),
                         Func(rToon.suit.loop, 'neutral'),
                         self.door2.posInterval(3, VBase3(0, 0, 30)))),
-                        
+
                         #Cut to the CFO rolling in
                         Func(rToon.setHpr, 0, 0, 0),
                         Func(rToon.setChatAbsolute, TTL.ResistanceToonTooLate, CFSpeech),
                         Func(camera.reparentTo, render),
                         Func(camera.setPosHpr, 61.1, -228.8, 10.2, -90, 0, 0),
-                        
+
                         #Open the CFO door
                         self.door1.posInterval(2, VBase3(0, 0, 30)),
-                        
+
                         #Roll the CFO in and close the door
                         Parallel(
                             bossTrack,
@@ -642,20 +642,20 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                                 Wait(3),
                                 Func(rToon.clearChat),
                                 self.door1.posInterval(3, VBase3(0, 0, 0)))),
-                            
+
                             #Close-up of the CFO...
                             Func(self.setChatAbsolute, TTL.CashbotBossDiscoverToons1, CFSpeech),
                             camera.posHprInterval(1.5, Point3(93.3, -230, 0.7), VBase3(-92.9, 39.7, 8.3)),
                             Func(self.setChatAbsolute, TTL.CashbotBossDiscoverToons2, CFSpeech),
                             Wait(4),
-                            
+
                             # Cut to toons losing their cog suits.
                             Func(self.clearChat),
                             self.loseCogSuits(self.toonsA + self.toonsB, render, (113, -228, 10, 90, 0, 0)),
                             Wait(1),
                             Func(rToon.setHpr, 0, 0, 0),
                             self.loseCogSuits([rToon], render, (133, -243, 5, 143, 0, 0), True),
-                            
+
                             #RT tells the toons to fight and runs off to open the door
                             Func(rToon.setChatAbsolute, TTL.ResistanceToonKeepHimBusy, CFSpeech),
                             Wait(1),
@@ -670,21 +670,21 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                                         rToon.posInterval(1.5, VBase3(93.935, -341.065, 2))),
                                     self.door2.posInterval(3, VBase3(0, 0, 0))),
                                     Func(rToon.animFSM.request, 'neutral')),
-                                    
+
                                     #clean up the toons' eyes
                                     self.toonNormalEyes(self.involvedToons),
                                     self.toonNormalEyes([self.resistanceToon], True),
-                                    
+
                                     #cut back to the CFO and move the toons in to place
                                     Func(rToon.clearChat),
                                     Func(camera.setPosHpr, 93.3, -230, 0.7, -92.9, 39.7, 8.3),
                                     Func(self.setChatAbsolute, attackToons, CFSpeech),
                                     Wait(2),
                                     Func(self.clearChat))
-		
+
         return Sequence(Func(camera.reparentTo, render), track)
 
-        
+
 
     def __makeGoonMovieForBattleThree(self):
         #start them each walking back and forth between 2 points
@@ -698,7 +698,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
           VBase3(231, 0, 0),
           Point3(127, -337, 0),
           VBase3(231, 0, 0)]]
-        
+
         #we're gonna leave this guy on the side... stunned
         mainGoon = self.fakeGoons[0]
         goonLoop = Parallel()
@@ -715,7 +715,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         # Generate an interval which shows the toons meeting the
         # Resistance Toon, and the introduction of the CFO, etc.,
         # leading to the events of battle one.
-            
+
         # We need to protect our movie against any of the toons
         # disconnecting while the movie plays.
         for toonId in self.involvedToons:
@@ -739,15 +739,15 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         bossTrack.append(track)
         track, hpr = self.rollBossToPoint(battlePos, battleHpr, battlePos, finalHpr, 0)
         bossTrack.append(track)
-        
+
         #grab the resistance toon and put him in his starting spot
         rToon = self.resistanceToon
         rToon.setPosHpr(93.935, -341.065, 0, -45, 0, 0)
-        
+
         #get a crane/goon to play with
         goon = self.fakeGoons[0]
         crane = self.cranes[0]
-        
+
         #build the sequence
         track = Sequence(
             Func(self.__hideToons),
@@ -756,13 +756,13 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             Func(crane.accomodateToon, rToon),
             Func(goon.request, 'Stunned'),
             Func(goon.setPosHpr, 104, -316, 0, 165, 0, 0),
-            
+
             #open the door and roll the boss through
             Parallel(
                 self.door2.posInterval(4.5, VBase3(0, 0, 30)),
                 self.door3.posInterval(4.5, VBase3(0, 0, 30)),
                 bossTrack),
-                
+
             #Cut to the resistance toon... he's gonna show the players something
             Func(rToon.loop, 'leverNeutral'),
             Func(camera.reparentTo, self.geom),
@@ -770,16 +770,16 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             Func(rToon.setChatAbsolute, TTL.ResistanceToonWatchThis, CFSpeech),
             Wait(2),
             Func(rToon.clearChat),
-            
+
             #Cut to the CFO telling the RT to knock it off
             Func(camera.setPosHpr, 105, -326, 20, -45.3, 11, 0),
             Func(self.setChatAbsolute, TTL.CashbotBossGetAwayFromThat, CFSpeech),
             Wait(2),
             Func(self.clearChat),
-            
+
             #The RT is having fun... cut to him doing the safe thing
             camera.posHprInterval(1.5, Point3(105, -326, 5), Point3(136.3, 0, 0), blendType='easeInOut'),
-            
+
             #tell em what to do
             Func(rToon.setChatAbsolute, TTL.ResistanceToonCraneInstructions1, CFSpeech),
             Wait(4),
@@ -790,19 +790,19 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             Func(rToon.setChatAbsolute, TTL.ResistanceToonCraneInstructions4, CFSpeech),
             Wait(4),
             Func(rToon.clearChat),
-            
+
             # Cut to the recovering goon
             Func(camera.setPosHpr, 102, -323.6, 0.9, -10.6, 14, 0),
             Func(goon.request, 'Recovery'),
             Wait(2),
-            
-            # Cut to the surprised resistance toon 
+
+            # Cut to the surprised resistance toon
             Func(camera.setPosHpr, 95.4, -332.6, 4.2, 167.1, -13.2, 0),
             Func(rToon.setChatAbsolute, TTL.ResistanceToonGetaway, CFSpeech),
             Func(rToon.animFSM.request, 'jump'),
             Wait(1.8),
             Func(rToon.clearChat),
-            
+
             #Cut to the goon chasing rtoon... close the door
             Func(camera.setPosHpr, 109.1, -300.7, 13.9, -15.6, -13.6, 0),
             Func(rToon.animFSM.request, 'run'),
@@ -813,7 +813,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                 goon.posHprInterval(3, Point3(125.2, -243.5, 0), VBase3(-14, 0, 0), startPos=Point3(104.8, -309.5, 0), startHpr=VBase3(-14, 0, 0))),
             Func(self.__hideFakeGoons),
             Func(crane.request, 'Free'),
-            
+
             #fix the CFO's orientation
             Func(self.getGeomNode().setH, 0),
             self.moveToonsToBattleThreePos(self.getInvolvedToonsNotSpectating()),
@@ -848,11 +848,11 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                     track.append(toon.posHprInterval(0.2, pos, hpr))
 
         return track
-    
+
     def setToonsToBattleThreePos(self, toons):
         """
-        Places each toon at the desired position and orientation without creating 
-        or returning any animation tracks. The position and orientation are 
+        Places each toon at the desired position and orientation without creating
+        or returning any animation tracks. The position and orientation are
         applied immediately.
         """
         if self.wantCustomCraneSpawns:
@@ -865,12 +865,12 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                     except KeyError:
                         # Or pick a random spot if it doesn't exist
                         toonWantedPosition = random.randrange(0, 7)
-                    
+
                     # Retrieve the position/HPR from the global constants
                     posHpr = CraneLeagueGlobals.TOON_SPAWN_POSITIONS[toonWantedPosition]
                     pos = Point3(*posHpr[0:3])
                     hpr = VBase3(*posHpr[3:6])
-                    
+
                     # Instantly set the toon's position/orientation
                     toon.setPosHpr(pos, hpr)
         else:
@@ -888,7 +888,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     def makeBossFleeMovie(self):
         # Generate an interval which shows the boss giving up and
         # running out the door, only to be nailed by a passing train.
-        
+
         hadEnough = TTLocalizer.CashbotBossHadEnough
         outtaHere = TTLocalizer.CashbotBossOuttaHere
         loco = loader.loadModel('phase_10/models/cogHQ/CashBotLocomotive')
@@ -898,7 +898,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         boomSfx = loader.loadSfx('phase_3.5/audio/sfx/ENC_cogfall_apart.ogg')
         rollThroughDoor = self.rollBossToPoint(fromPos=Point3(120, -280, 0), fromHpr=None, toPos=Point3(120, -250, 0), toHpr=None, reverse=0)
         rollTrack = Sequence(Func(self.getGeomNode().setH, 180), rollThroughDoor[0], Func(self.getGeomNode().setH, 0))
-        
+
 
         # Generate a track that shows one long train running by (which
         # it achieves by running the same two cars repeatedly past
@@ -934,30 +934,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                 Func(self.reverseHead),
                 ActorInterval(self, 'Fb_firstHit'),
                 ActorInterval(self, 'Fb_down2Up'))),
-            (1.0, Func(self.setChatAbsolute, hadEnough, CFSpeech)),
-            (5.5, Parallel(
-                Func(camera.setPosHpr, 100, -315, 16, -20, 0, 0),
-                Func(self.hideBattleThreeObjects),
-                Func(self.forwardHead),
-                Func(self.loop, 'Ff_neutral'),
-                rollTrack,
-                self.door3.posInterval(2.5, Point3(0, 0, 25), startPos=Point3(0, 0, 18)))),
-            (5.5, Func(self.setChatAbsolute, outtaHere, CFSpeech)),
-            (5.5, SoundInterval(trainPassingSfx)),
-            (8.1, Func(self.clearChat)),
-            (9.4, Sequence(
-                Func(loco.reparentTo, render),
-                Func(car1.reparentTo, render),
-                Func(car2.reparentTo, render),
-                trainTrack,
-                Func(loco.detachNode),
-                Func(car1.detachNode),
-                Func(car2.detachNode),
-                Wait(2))),
-            (9.5, SoundInterval(boomSfx)),
-            (9.5, Sequence(
-                self.posInterval(0.4, Point3(0, -250, 0)),
-                Func(self.stash))))
+            (1.0, Func(self.setChatAbsolute, hadEnough, CFSpeech)))
         return bossTrack
 
     def grabObject(self, obj):
@@ -977,24 +954,24 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def dropObject(self, obj):
         # Drop a helmet on the ground.
-        
+
         # This is only called by DistributedCashbotBossObject.exitGrabbed().
         assert self.heldObject == obj
-        
+
         if obj.lerpInterval:
             obj.lerpInterval.finish()
             obj.lerpInterval = None
-            
+
         obj = self.heldObject
         obj.wrtReparentTo(render)
         obj.setHpr(obj.getH(), 0, 0)
         self.eyes.hide()
-        
+
         # Actually, we shouldn't reveal the shadows until it
         # reaches the ground again.  This will do for now.
         obj.showShadows()
         obj.unstashCollisions()
-        
+
         self.heldObject = None
         return
 
@@ -1013,7 +990,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
         if objId in self.myHits:
             self.myHits.remove(objId)
-    
+
         self.bossDamage = bossDamage
         self.updateHealthBar()
         self.bossHealthBar.update(self.ruleset.CFO_MAX_HP - bossDamage, self.ruleset.CFO_MAX_HP)
@@ -1033,7 +1010,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     def stunAllGoons(self):
         # This is called by the "~bossBattle stun" magic word only.
         # It stuns all of the goons in the final battle sequence.
-        
+
         for goon in self.goons:
             if goon.state == 'Walk' or goon.state == 'Battle':
                 goon.demand('Stunned')
@@ -1112,7 +1089,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     def __talkAboutPromotion(self, speech):
         # Extends the congratulations speech to talk about the earned
         # promotion, if any.  Returns the newly-extended speech.
-        
+
         # don't say anything about a promotion if they've maxed their cog suit
         if self.prevCogSuitLevel < ToontownGlobals.MaxCogSuitLevel:
             newCogSuitLevel = localAvatar.getCogLevels()[CogDisguiseGlobals.dept2deptIndex(self.style.dept)]
@@ -1140,7 +1117,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     ##### WaitForToons state #####
     def enterWaitForToons(self):
         DistributedBossCog.DistributedBossCog.enterWaitForToons(self)
-        
+
         self.detachNode()
         self.geom.hide()
 
@@ -1152,25 +1129,25 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         DistributedBossCog.DistributedBossCog.exitWaitForToons(self)
         self.geom.show()
         self.resistanceToon.addActive()
-        
+
     ##### Elevator state #####
     def enterElevator(self):
         DistributedBossCog.DistributedBossCog.enterElevator(self)
-        
+
         # The CFO himself is offstage at this point.
         self.detachNode()
 
         # Disable the caged toon's nametag while we're in the
         # elevator.
         self.resistanceToon.removeActive()
-        
+
         self.endVault.stash()
         self.midVault.unstash()
         self.__showResistanceToon(True)
 
     def exitElevator(self):
         DistributedBossCog.DistributedBossCog.exitElevator(self)
-        
+
         self.resistanceToon.addActive()
 
     ##### Introduction state #####
@@ -1178,14 +1155,14 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         # Initially, the boss cog is offstage.
         self.detachNode()
         self.stopAnimate()
-        
+
         self.endVault.unstash()
         self.evWalls.stash()
         self.midVault.unstash()
         self.__showResistanceToon(True)
-        
+
         base.playMusic(self.stingMusic, looping=1, volume=0.9)
-        
+
         DistributedBossCog.DistributedBossCog.enterIntroduction(self)
 
     def exitIntroduction(self):
@@ -1210,35 +1187,35 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     ##### PrepareBattleThree state #####
     def enterPrepareBattleThree(self):
         self.__hideSpectators()
-        
+
         self.controlToons()
-        
+
         NametagGlobals.setMasterArrowsOn(0)
-        
+
         intervalName = 'PrepareBattleThreeMovie'
         delayDeletes = []
-        
+
         #grab a crane and put it in to Movie mode
         self.movieCrane = self.cranes[0]
         self.movieCrane.request('Movie')
-        
+
         seq = Sequence(self.makePrepareBattleThreeMovie(delayDeletes, self.movieCrane), Func(self.__beginBattleThree), name=intervalName)
         seq.delayDeletes = delayDeletes
         seq.start()
         self.storeInterval(seq, intervalName)
-        
+
         self.endVault.unstash()
         self.evWalls.stash()
         self.midVault.unstash()
-        
+
         self.__showResistanceToon(False)
-        
+
         taskMgr.add(self.__doPhysics, self.uniqueName('physics'), priority=25)
 
     def __beginBattleThree(self):
         intervalName = 'PrepareBattleThreeMovie'
         self.clearInterval(intervalName)
-        
+
         self.doneBarrier('PrepareBattleThree')
 
     def exitPrepareBattleThree(self):
@@ -1246,15 +1223,15 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.clearInterval(intervalName)
         self.unstickToons()
         self.releaseToons()
-        
+
         if self.newState == 'BattleThree':
             self.movieCrane.request('Free')
 
         NametagGlobals.setMasterArrowsOn(1)
-        
+
         # Make sure the elevator doors are closed.
         ElevatorUtils.closeDoors(self.leftDoor, self.rightDoor, ElevatorConstants.ELEVATOR_CFO)
-        
+
         taskMgr.remove(self.uniqueName('physics'))
 
     def enterBattleThree(self):
@@ -1264,51 +1241,51 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         if self.bossHealthBar:
             self.bossHealthBar.cleanup()
             self.bossHealthBar = BossHealthBar.BossHealthBar(self.style.dept)
-            
+
         DistributedBossCog.DistributedBossCog.enterBattleThree(self)
-        
+
         self.clearChat()
         self.resistanceToon.clearChat()
         self.reparentTo(render)
 
         if self.oldState == 'BattleThree':
             self.setToonsToBattleThreePos(self.getInvolvedToonsNotSpectating())
-        
+
         self.setPosHpr(*ToontownGlobals.CashbotBossBattleThreePosHpr)
-        
+
         self.happy = 1
         self.raised = 1
         self.forward = 1
         self.doAnimate()
-        
+
         self.endVault.unstash()
         self.evWalls.unstash()
         self.midVault.stash()
         self.__hideResistanceToon()
-        
+
         localAvatar.orbitalCamera.start()
-        
+
         localAvatar.setCameraFov(ToontownGlobals.BossBattleCameraFov)
-        
+
         self.generateHealthBar()
         self.updateHealthBar()
-        
+
         base.playMusic(self.battleThreeMusic, looping=1, volume=0.9)
-        
+
         # It is important to make sure this task runs immediately
         # before the collisionLoop of ShowBase.  That will fix up the
         # z value of the safes, etc., before their position is
         # distributed.
         taskMgr.add(self.__doPhysics, self.uniqueName('physics'), priority=25)
-        
+
         # Display Health Bar
         self.bossHealthBar.initialize(self.ruleset.CFO_MAX_HP - self.bossDamage, self.ruleset.CFO_MAX_HP)
-        
+
         # Display Boss Timer
         self.bossSpeedrunTimer.reset()
         self.bossSpeedrunTimer.start_updating()
         self.bossSpeedrunTimer.show()
-        
+
         # Display Modifiers Heat
         self.heatDisplay.update(self.calculateHeat(), self.modifiers)
         self.heatDisplay.show()
@@ -1365,32 +1342,32 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     def enterVictory(self):
         # No more intervals should be playing.
         self.cleanupIntervals()
-        
+
         # Boss Cog flees out the door and gets nailed by a passing
         # train.
         self.reparentTo(render)
         self.setPosHpr(*ToontownGlobals.CashbotBossBattleThreePosHpr)
         self.stopAnimate()
-        
+
         self.endVault.unstash()
         self.evWalls.unstash()
         self.midVault.unstash()
         self.__hideResistanceToon()
         self.__hideToons()
-        
+
         self.clearChat()
         self.resistanceToon.clearChat()
-        
+
         # Important to knock toons off cranes before we control them.
         self.deactivateCranes()
-        
+
         # This particular crane might get in the way of the camera.
         if self.cranes:
             self.cranes[1].demand('Off')
-        
+
         # No one owns the toons.
         self.releaseToons(finalBattle=1)
-        
+
         # But, we do need to be in movie mode.
         if self.hasLocalToon():
             self.toMovieMode()
@@ -1416,11 +1393,11 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         if self.newState != 'Reward':
             if self.hasLocalToon():
                 self.toWalkMode()
-                
+
         self.__showToons()
-        
+
         self.door3.setPos(0, 0, 0)
-        
+
         if self.newState != 'Reward':
             self.battleThreeMusic.stop()
 
@@ -1430,12 +1407,12 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.cleanupIntervals()
         self.clearChat()
         self.resistanceToon.clearChat()
-        
+
         # Boss Cog is gone.
         self.stash()
         self.stopAnimate()
         self.controlToons()
-        
+
         # Start the reward movie playing.
         panelName = self.uniqueName('reward')
         self.rewardPanel = RewardPanel.RewardPanel(panelName)
@@ -1467,27 +1444,27 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.rewardPanel.destroy()
         del self.rewardPanel
         self.battleThreeMusic.stop()
-        
+
     ##### Epilogue state #####
     def enterEpilogue(self):
         # No more intervals should be playing.
         self.cleanupIntervals()
         self.clearChat()
         self.resistanceToon.clearChat()
-        
+
         # Boss Cog is gone.
         self.stash()
         self.stopAnimate()
-        
+
         # The toons are under our control once again.
         self.controlToons()
         self.__showResistanceToon(False)
-        
+
         self.resistanceToon.setPosHpr(*ToontownGlobals.CashbotBossBattleThreePosHpr)
         self.resistanceToon.loop('neutral')
-        
+
         self.__arrangeToonsAroundResistanceToon()
-        
+
         camera.reparentTo(render)
         camera.setPos(self.resistanceToon, -9, 12, 6)
         camera.lookAt(self.resistanceToon, 0, 0, 3)
@@ -1495,12 +1472,12 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
         speech = TTLocalizer.ResistanceToonCongratulations
         speech = self.__talkAboutPromotion(speech)
-        
+
         self.resistanceToon.setLocalPageChat(speech, 0)
-        
+
         self.accept('nextChatPage', self.__epilogueChatNext)
         self.accept('doneChatPage', self.__epilogueChatDone)
-        
+
         base.playMusic(self.epilogueMusic, looping=1, volume=0.9)
 
     def __epilogueChatNext(self, pageNumber, elapsed):
@@ -1531,7 +1508,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.clearInterval('EpilogueMovieToonAnim')
         self.unstash()
         self.epilogueMusic.stop()
-        
+
 
     ##### Frolic state #####
 
@@ -1565,17 +1542,17 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def killingBlowDealt(self, avId):
         self.scoreboard.addScore(avId, self.ruleset.POINTS_KILLING_BLOW, CraneLeagueGlobals.KILLING_BLOW_TEXT)
-        
+
     def updateDamageDealt(self, avId, damageDealt):
         self.scoreboard.addScore(avId, damageDealt)
         self.scoreboard.addDamage(avId, damageDealt)
-        
+
     def updateStunCount(self, avId, craneId):
         crane = base.cr.doId2do.get(craneId)
         if crane:
             self.scoreboard.addScore(avId, crane.getPointsForStun(), CraneLeagueGlobals.STUN_TEXT)
             self.scoreboard.addStun(avId)
-        
+
     def updateGoonsStomped(self, avId):
         self.scoreboard.addScore(avId, self.ruleset.POINTS_GOON_STOMP, CraneLeagueGlobals.GOON_STOMP_TEXT)
         self.scoreboard.addStomp(avId)
@@ -1619,7 +1596,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def announceCraneRestartRCR(self):
         restartingOrEnding = 'Restarting '
-        
+
         # Main countdown text - made larger and bolder with outline
         title = OnscreenText(
             parent=aspect2d,
@@ -1635,7 +1612,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             mayChange=True
         )
         title.setR(0)  # Ensure text is not rotated
-        
+
         # Subtitle text - made more visible
         sub = OnscreenText(
             parent=aspect2d,
