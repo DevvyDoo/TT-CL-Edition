@@ -976,6 +976,11 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
                                    content='post-Releasing object, currently holding: %s' % (self.heldObject.getName() if self.heldObject else "Nothing"))
 
     def __hitTrigger(self, event):
+
+        # If we are dead, don't request the crane controls.
+        if base.localAvatar.hp <= 0:
+            return
+
         self.demand('LocalControlled', base.localAvatar.doId)
         self.d_requestControl()
 
