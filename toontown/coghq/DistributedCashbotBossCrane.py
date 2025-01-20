@@ -1320,9 +1320,6 @@ class DistributedCashbotBossCrane(DistributedObject.DistributedObject, FSM.FSM):
         del self.grabTrack
 
         if self.toon and not self.toon.isDisabled():
-            if self.toon.isStunned:
-                self.toon.stunToon()
-
             self.toon.loop('neutral')
             self.toon.startSmooth()
 
