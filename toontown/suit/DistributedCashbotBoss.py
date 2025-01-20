@@ -1728,8 +1728,4 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         return time.time() - self.startTimestamp
 
     def zapLocalToon(self, attackCode, origin = None):
-
-        if self.getElapsedTime() <= 2:
-            return
-
         super().zapLocalToon(attackCode, origin)
