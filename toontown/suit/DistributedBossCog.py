@@ -406,11 +406,12 @@ class DistributedBossCog(DistributedAvatar.DistributedAvatar, BossCog.BossCog):
             if place and hasattr(place, 'fsm'):
                 place.setState('walk')
 
-    def toFinalBattleMode(self):
+    def toFinalBattleMode(self, checkForOuch: bool = False):
         if self.cr:
             place = self.cr.playGame.getPlace()
             if place and hasattr(place, 'fsm'):
-                place.setState('finalBattle')
+                if not checkForOuch or place.fsm.getCurrentState().getName() != 'ouch':
+                    place.setState('finalBattle')
 
     def releaseToons(self, finalBattle = 0):
         for toonId in self.involvedToons:

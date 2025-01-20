@@ -554,7 +554,6 @@ class DistributedBanquetTable(DistributedObject.DistributedObject, FSM.FSM, Banq
                 localAvatar.wrtReparentTo(render)
                 self.__disableControlInterface()
                 base.localAvatar.orbitalCamera.start()
-                self.goToFinalBattle()
                 self.safeBossToFinalBattleMode()
             else:
                 toon = base.cr.doId2do.get(self.avId)
@@ -565,7 +564,7 @@ class DistributedBanquetTable(DistributedObject.DistributedObject, FSM.FSM, Banq
 
     def safeBossToFinalBattleMode(self):
         if self.boss:
-            self.boss.toFinalBattleMode()
+            self.boss.toFinalBattleMode(checkForOuch=True)
 
     def goToFinalBattle(self):
         if self.cr:
