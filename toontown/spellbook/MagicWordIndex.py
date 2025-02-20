@@ -3222,10 +3222,21 @@ class StartBoss(MagicWord):
 
         for hood in simbase.air.hoods:
             if hood.zoneId == toon.zoneId:
-                zone = hood.lobbyMgr.createBossOffice([avId])
-                toon.sendUpdate('forceEnterBoss', [toon.zoneId, zone])
+                # TODO this seems suboptimal, scanning for all distributed objects to find just a few toons
+                # However, as it is just a one-off call at the beginning of the session this may be acceptable as list
+                # contains ~3000 elements only
+                toons = self.getToonsInZoneId(hood.zoneId)
+                toon_doids = list(map(lambda t: t.doId, toons))
+                zone = hood.lobbyMgr.createBossOffice(toon_doids)
+                for foundToon in toons:
+                    foundToon.sendUpdate('forceEnterBoss', [foundToon.zoneId, zone])
                 return 'Successfully created a boss!'
         return 'Cog HQ hood data not found!'
+
+    def getToonsInZoneId(self, zoneId):
+        return list(filter(lambda
+                               do: do is not None and do.dclass.getName() == 'DistributedToon' and do.zoneId == zoneId,
+                           list(self.air.doId2do.values())))
 
 
 class dna(MagicWord):
