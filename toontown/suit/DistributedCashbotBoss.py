@@ -716,17 +716,17 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         startHpr = Point3(ToontownGlobals.CashbotBossBattleOnePosHpr[3], ToontownGlobals.CashbotBossBattleOnePosHpr[4], ToontownGlobals.CashbotBossBattleOnePosHpr[5])
         battleHpr = VBase3(ToontownGlobals.CashbotBossBattleThreePosHpr[3], ToontownGlobals.CashbotBossBattleThreePosHpr[4], ToontownGlobals.CashbotBossBattleThreePosHpr[5])
         finalHpr = VBase3(135, 0, 0)
-        bossTrack = Sequence()
-        bossTrack.append(Func(self.reparentTo, render))
-        bossTrack.append(Func(self.getGeomNode().setH, 180))
-        bossTrack.append(Func(self.pelvis.setHpr, self.pelvisForwardHpr))
-        bossTrack.append(Func(self.loop, 'Ff_neutral'))
-        track, hpr = self.rollBossToPoint(startPos, startHpr, startPos, battleHpr, 0)
-        bossTrack.append(track)
-        track, hpr = self.rollBossToPoint(startPos, None, battlePos, None, 0)
-        bossTrack.append(track)
-        track, hpr = self.rollBossToPoint(battlePos, battleHpr, battlePos, finalHpr, 0)
-        bossTrack.append(track)
+        #bossTrack = Sequence()
+        #bossTrack.append(Func(self.reparentTo, render))
+        #bossTrack.append(Func(self.getGeomNode().setH, 180))
+        #bossTrack.append(Func(self.pelvis.setHpr, self.pelvisForwardHpr))
+        #bossTrack.append(Func(self.loop, 'Ff_neutral'))
+        #track, hpr = self.rollBossToPoint(startPos, startHpr, startPos, battleHpr, 0)
+        #bossTrack.append(track)
+        #track, hpr = self.rollBossToPoint(startPos, None, battlePos, None, 0)
+        #bossTrack.append(track)
+        #track, hpr = self.rollBossToPoint(battlePos, battleHpr, battlePos, finalHpr, 0)
+        #bossTrack.append(track)
         
         #grab the resistance toon and put him in his starting spot
         rToon = self.resistanceToon
@@ -748,8 +748,7 @@ class DistributedCashbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             #open the door and roll the boss through
             Parallel(
                 self.door2.posInterval(4.5, VBase3(0, 0, 30)),
-                self.door3.posInterval(4.5, VBase3(0, 0, 30)),
-                bossTrack),
+                self.door3.posInterval(4.5, VBase3(0, 0, 30))),
                 
             #Cut to the resistance toon... he's gonna show the players something
             Func(rToon.loop, 'leverNeutral'),
